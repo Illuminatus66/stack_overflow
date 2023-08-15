@@ -20,7 +20,7 @@ export const signUp = (authData) => API.post("/.netlify/functions/signup", authD
 export const postQuestion = (questionData) =>
   API.post("/.netlify/functions/askQuestion", questionData, { withCredentials: true });
 export const getAllQuestions = () => API.get("/.netlify/functions/getAllQuestions");
-export const deleteQuestion = (id) => API.delete(`/.netlify/functions/deleteQuestion/${id}`, { withCredentials: true });
+export const deleteQuestion = (_id) => API.delete(`/.netlify/functions/deleteQuestion/${_id}`, { withCredentials: true });
 export const voteQuestion = (id, value) =>
   API.patch(`/.netlify/functions/voteQuestion/${id}`, { value }, { withCredentials: true });
 export const searchQuestions = (query) =>
