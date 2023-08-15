@@ -1,33 +1,54 @@
-# Getting Started with Create React App
+# Clone of Stack Overflow built for CI/CD SPA hosting services, offering serverless capacities
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Link - https://stack-illuminatus66.netlify.app/
 
-## Available Scripts
+## Development build
 
-In the project directory, you can run:
+This project was initially developed on localhost by setting up an Express.js server 
+and routes to accompany different actions that were executed on a MongoDB Atlas cluster.
 
-### `npm start`
+The server listened to HTTP requests from Axios' intuitive, simple and fast API interface.
+The endpoints obviously looked very different when Express.js was being used.
+The connection to the database was simpler. The applcation of JWT middleware for 
+authentication purposes was simpler, too.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Of course, SEO tradeoffs need to be taken into consideration but the nature of the
+website is such that the question list needs to be requested after the skeleton of
+the application loads. Maybe someone could try rendering an entire initial landing page on 
+the server-side so headless browsers could crawl the home page.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+If you want, you could try your hand at generating an initial HTML-only snapshot of
+the current build while the Javascript loads ( I do not possess enough knowledge for that). 
 
-### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Hosting on separate platforms
 
-### `npm run build`
+If you want you could separately host the serverless functions on something like 
+AWS Lambda, Azure, Vercel or ##Netlify, though some changes might need to be done
+regarding the syntax based on the platform of your choice.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The front-end is a React SPA, so you can go crazy with that. I hosted it on Netlify 
+to take advantage of their free-tier services.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+If you do decide to host the React app and the functions separately, don't forget to 
+allow CORS but I hosted them under one domain so that I don't have to worry about the 
+request headers too much.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Build command
+
+The build command, as always, is "npm run build"
+
+### Cold-start issues
+
+Yes, I realise the application seems really slow when starting-up, I will try hosting it 
+on AWS to compare the speed of the requests, I hear it is much better than it's competitors
+
+### Cannot share links to questions
+
+Due to the nomenclature of serverless functions, I still haven't been able to figure out 
+a way to name the app urls in a manner such that, the relevant function could execute all
+on it's own if someone simply pastes the URL of the question details page. If you would like
+to help, please let me know.
 
 ### `npm run eject`
 
@@ -43,28 +64,4 @@ You don't have to ever use `eject`. The curated feature set is suitable for smal
 
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+To learn React, check out the [React documentation](https://react.dev/learn).
