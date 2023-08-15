@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: 'https://illuminatus66-stackoverflow.netlify.app'
+  baseURL: 'https://stack-illuminatus66.netlify.app'
 });
 
 API.interceptors.request.use((req) => {
