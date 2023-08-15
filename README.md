@@ -1,6 +1,6 @@
 # Clone of Stack Overflow built for CI/CD SPA hosting services, offering serverless capacities
 
-##Link - https://stack-illuminatus66.netlify.app/
+## Link - https://stack-illuminatus66.netlify.app/
 
 ## Development build
 
