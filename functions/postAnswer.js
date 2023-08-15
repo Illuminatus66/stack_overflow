@@ -57,7 +57,8 @@ const updateNoOfQuestions = async (_id, noOfAnswers) => {
 
 exports.handler = auth (async (event, context) => {
   try {
-    const { id: _id } = event.params;
+    const pathSegments = event.path.split('/');
+    const _id = pathSegments[pathSegments.length - 1];
     const { noOfAnswers, answerBody, userAnswered } = JSON.parse(event.body);
     const userId = event.userId;
 

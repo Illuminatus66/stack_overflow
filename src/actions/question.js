@@ -41,9 +41,9 @@ export const voteQuestion = (_id, value) => async (dispatch) => {
 
 export const postAnswer = (answerData) => async (dispatch) => {
   try {
-    const { id, noOfAnswers, answerBody, userAnswered } = answerData;
+    const { _id, noOfAnswers, answerBody, userAnswered } = answerData;
     const { data } = await api.postAnswer(
-      id,
+      _id,
       noOfAnswers,
       answerBody,
       userAnswered
