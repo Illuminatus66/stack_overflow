@@ -32,6 +32,6 @@ export const deleteAnswer = (_id, answerId, noOfAnswers) =>
   API.patch(`/.netlify/functions/deleteAnswer/${_id}`, { answerId, noOfAnswers }, { withCredentials: true });
 
 export const getAllUsers = () => API.get("/.netlify/functions/getAllUsers");
-export const updateProfile = (id, updateData) =>
-  API.patch(`/.netlify/functions/updateProfile/${id}`, updateData, { withCredentials: true });
+export const updateProfile = (_id, updateData) =>
+  API.patch(`/.netlify/functions/updateProfile/${_id}`, updateData, { withCredentials: true });
 
