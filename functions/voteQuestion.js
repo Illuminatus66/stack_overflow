@@ -46,7 +46,8 @@ const auth = (handler) => async (event, context) => {
 };
 
 exports.handler = auth (async (event, context) => {
-  const { id: _id } = event.params;
+  const pathSegments = event.path.split('/');
+  const _id = pathSegments[pathSegments.length - 1];
   const { value } = JSON.parse(event.body);
   const userId = event.userId;
 

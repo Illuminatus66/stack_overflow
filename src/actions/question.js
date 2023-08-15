@@ -30,9 +30,9 @@ export const deleteQuestion = (_id, navigate) => async (dispatch) => {
   }
 };
 
-export const voteQuestion = (id, value) => async (dispatch) => {
+export const voteQuestion = (_id, value) => async (dispatch) => {
   try {
-    await api.voteQuestion(id, value);
+    await api.voteQuestion(_id, value);
     dispatch(fetchAllQuestions());
   } catch (error) {
     console.log(error);
