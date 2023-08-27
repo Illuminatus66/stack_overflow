@@ -1,23 +1,31 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
+import users from "../models/auth.js";
+import mongoose from "mongoose";
 
 dotenv.config();
 
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.CONNECTION_URL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("MongoDB connected");
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+};
+
+connectDB();
+
 exports.handler = async function (event, context) {
-  const uri = process.env.CONNECTION_URL;
-  const databaseName= "test";
-  const collectionName= "users";
   const { name, email, password } = JSON.parse(event.body);
-  let client;
   
   try {
-    client = new MongoClient (uri, { useUnifiedTopology: true, useNewUrlParser: true });
-    await client.connect();
-    const db = client.db(databaseName);
-    const collection = db.collection(collectionName);
-    const existingUser = await collection.findOne({ email });
+    const existingUser = await users.findOne({ email });
     if (existingUser) {
       return {
         statusCode: 404,
@@ -26,16 +34,15 @@ exports.handler = async function (event, context) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    const newUser = {
+    const newUser = await users.create ({
       name,
       email,
       password: hashedPassword,
-    };
-    const result = await collection.insertOne(newUser);
+    });
     const token = jwt.sign(
-      { email: newUser.email, id: result.insertedId },
+      { email: newUser.email, id: newUser._id },
       process.env.JWT_SECRET,
-      { expiresIn: "2h" }
+      { expiresIn: "1h" }
     );
     return {
       statusCode: 201,
@@ -46,9 +53,5 @@ exports.handler = async function (event, context) {
       statusCode: 500,
       body: JSON.stringify({ message: "Something went wrong..." }),
     };
-  } finally {
-    if (client) {
-      client.close();
-    }
   }
 };

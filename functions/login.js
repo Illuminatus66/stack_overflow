@@ -1,23 +1,31 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import { MongoClient } from "mongodb";
+import users from "../models/auth.js";
+import mongoose from 'mongoose'
 
 dotenv.config();
 
-exports.handler = async function (event, context) {
-
-const { email, password } = JSON.parse(event.body);
-const uri = process.env.CONNECTION_URL;
-const databaseName= "test";
-const collectionName= "users";
-let client;
+const connectDB = async () => {
   try {
-    client = new MongoClient (uri, { useUnifiedTopology: true, useNewUrlParser: true });
-    await client.connect();
-    const db = client.db(databaseName);
-    const collection = db.collection(collectionName);
-    const existingUser = await collection.findOne({ email });
+    await mongoose.connect(process.env.CONNECTION_URL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("MongoDB connected");
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+};
+
+connectDB();
+
+exports.handler = async function (event, context) {
+  const { email, password } = JSON.parse(event.body);
+
+  try {
+    const existingUser = await users.findOne({ email });
     if (!existingUser) {
       return {
         statusCode: 404,
@@ -37,7 +45,7 @@ let client;
     const token = jwt.sign(
       { email: existingUser.email, id: existingUser._id },
       process.env.JWT_SECRET,
-      { expiresIn: "2h" }
+      { expiresIn: "1h" }
     );
     return {
       statusCode: 200,
