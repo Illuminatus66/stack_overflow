@@ -1,25 +1,33 @@
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
+import { Client } from "cassandra-driver";
 import dotenv from "dotenv";
-import Questions from "../models/Questions.js";
 
 dotenv.config();
 
-// Establish database connection
+const client = new Client({
+  cloud: {
+    secureConnectBundle: "secure-connect-stack-overflow.zip",
+  },
+  credentials: {
+    username: process.env.ASTRA_DB_USERNAME,
+    password: process.env.ASTRA_DB_PASSWORD,
+  },
+});
+
+const keyspace = process.env.ASTRA_DB_KEYSPACE;
+const tablename1 = process.env.ASTRA_DB_QUESTIONS;
+const tablename2 = process.env.ASTRA_DB_ANSWERS;
+
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.CONNECTION_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("MongoDB connected");
+    await client.connect();
+    console.log("Connected to Astra DB");
   } catch (error) {
     console.error(error);
     process.exit(1);
   }
 };
 
-// Invoke the database connection
 connectDB();
 
 const auth = (handler) => async (event, context) => {
@@ -45,27 +53,36 @@ const auth = (handler) => async (event, context) => {
   }
 };
 
-exports.handler = auth (async (event, context) => {
+exports.handler = auth(async (event, context) => {
   const pathSegments = event.path.split('/');
   const _id = pathSegments[pathSegments.length - 1];
 
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
-    return {
-      statusCode: 404,
-      body: "question unavailable...",
-    };
-  }
-
   try {
-    await Questions.findByIdAndRemove(_id);
+    const deleteQuestionQuery = `
+      DELETE FROM ${keyspace}.${tablename1}
+      WHERE question_id = ?`;
+
+    const deleteQuestionParams = [_id];
+
+    await client.execute(deleteQuestionQuery, deleteQuestionParams, { prepare: true });
+
+    const deleteAnswersQuery = `
+      DELETE FROM ${keyspace}.${tablename2}
+      WHERE question_id = ?`;
+    
+    const deleteAnswersParams = [_id];
+
+    await client.execute(deleteAnswersQuery, deleteAnswersParams, { prepare: true });
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "successfully deleted..." }),
+      body: JSON.stringify({ message: "Question and associated answer successfully deleted..." }),
     };
   } catch (error) {
+    console.error(error);
     return {
       statusCode: 404,
-      body: JSON.stringify({ message: error.message }),
+      body: JSON.stringify({ message: "Question and answer deletion failed" }),
     };
   }
 });

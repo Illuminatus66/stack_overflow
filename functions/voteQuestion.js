@@ -1,25 +1,33 @@
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
+import { Client } from "cassandra-driver";
 import dotenv from "dotenv";
-import Questions from "../models/Questions.js";
 
 dotenv.config();
+
+const client = new Client({
+  cloud: {
+    secureConnectBundle: "secure-connect-stack-overflow.zip",
+  },
+  credentials: {
+    username: process.env.ASTRA_DB_USERNAME,
+    password: process.env.ASTRA_DB_PASSWORD,
+  },
+});
+
+const keyspace = process.env.ASTRA_DB_KEYSPACE;
+const tablename = process.env.ASTRA_DB_QUESTIONS;
 
 // Establish database connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.CONNECTION_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("MongoDB connected");
+    await client.connect();
+    console.log("Connected to Astra DB");
   } catch (error) {
     console.error(error);
     process.exit(1);
   }
 };
 
-// Invoke the database connection
 connectDB();
 
 const auth = (handler) => async (event, context) => {
@@ -45,59 +53,73 @@ const auth = (handler) => async (event, context) => {
   }
 };
 
-exports.handler = auth (async (event, context) => {
+exports.handler = auth(async (event, context) => {
   const pathSegments = event.path.split('/');
   const _id = pathSegments[pathSegments.length - 1];
   const { value } = JSON.parse(event.body);
   const userId = event.userId;
 
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
-    return {
-      statusCode: 404,
-      body: "question unavailable...",
-    };
-  }
-
   try {
-    const question = await Questions.findById(_id);
-    const upIndex = question.upVote.findIndex((id) => id === String(userId));
-    const downIndex = question.downVote.findIndex(
-      (id) => id === String(userId)
-    );
+    const selectQuery = `
+      SELECT * FROM ${keyspace}.${tablename}
+      WHERE question_id = ?`;
+
+    const selectParams = [_id];
+
+    const result = await client.execute(selectQuery, selectParams, {
+      prepare: true,
+    });
+
+    if (result.rows.length === 0) {
+      return {
+        statusCode: 404,
+        body: "Question unavailable...",
+      };
+    }
+
+    const question = result.rows[0];
+
+    const upIndex = question.upvote.findIndex((id) => id === userId);
+    const downIndex = question.downvote.findIndex((id) => id === userId);
 
     if (value === "upVote") {
       if (downIndex !== -1) {
-        question.downVote = question.downVote.filter(
-          (id) => id !== String(userId)
-        );
+        question.downvote.splice(downIndex, 1);
       }
       if (upIndex === -1) {
-        question.upVote.push(userId);
+        question.upvote.push(userId);
       } else {
-        question.upVote = question.upVote.filter((id) => id !== String(userId));
+        question.upvote.splice(upIndex, 1);
       }
     } else if (value === "downVote") {
       if (upIndex !== -1) {
-        question.upVote = question.upVote.filter((id) => id !== String(userId));
+        question.upvote.splice(upIndex, 1);
       }
       if (downIndex === -1) {
-        question.downVote.push(userId);
+        question.downvote.push(userId);
       } else {
-        question.downVote = question.downVote.filter(
-          (id) => id !== String(userId)
-        );
+        question.downvote.splice(downIndex, 1);
       }
     }
 
-    await Questions.findByIdAndUpdate(_id, question);
+    const updateQuery = `
+      UPDATE ${keyspace}.${tablename}
+      SET up_vote = ?, down_vote = ?
+      WHERE question_id = ?`;
+
+    const updateParams = [question.upvote, question.downvote, _id];
+
+    await client.execute(updateQuery, updateParams, { prepare: true });
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "voted successfully..." }),
+      body: JSON.stringify({ message: "Vote updated successfully..." }),
     };
   } catch (error) {
+    console.error(error);
     return {
       statusCode: 404,
-      body: JSON.stringify({ message: "id not found" }),
+      body: JSON.stringify({ message: "Vote update failed" }),
     };
   }
 });

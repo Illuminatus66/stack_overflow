@@ -1,25 +1,31 @@
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
+import { Client } from "cassandra-driver";
 import dotenv from "dotenv";
-import Questions from "../models/Questions.js";
 
 dotenv.config();
 
-// Establish database connection
+const client = new Client({
+  cloud: {
+    secureConnectBundle: "secure-connect-stack-overflow.zip",
+  },
+  credentials: {
+    username: process.env.ASTRA_DB_USERNAME,
+    password: process.env.ASTRA_DB_PASSWORD,
+  },
+});
+const keyspace = process.env.ASTRA_DB_KEYSPACE;
+const tablename = process.env.ASTRA_DB_QUESTIONS;
+
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.CONNECTION_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("MongoDB connected");
+    await client.connect();
+    console.log("Connected to Cassandra");
   } catch (error) {
     console.error(error);
     process.exit(1);
   }
 };
 
-// Invoke the database connection
 connectDB();
 
 const auth = (handler) => async (event, context) => {
@@ -50,14 +56,25 @@ exports.handler = auth(async (event, context) => {
     const postQuestionData = JSON.parse(event.body);
     const userId = event.userId;
 
-    // Create a new question object
-    const postQuestion = new Questions({
-      ...postQuestionData,
-      userId,
-    });
+    const query = `
+      INSERT INTO ${keyspace}.${tablename} (question_title, question_body, question_tags, user_posted, user_id, no_of_answers, up_vote, down_vote, asked_on)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, toTimestamp(now()))`;
 
-    // Save the question to the database
-    await postQuestion.save();
+    const upVote = [];
+    const downVote = [];
+
+    const params = [
+      postQuestionData.questionTitle,
+      postQuestionData.questionBody,
+      postQuestionData.questionTags,
+      postQuestionData.userPosted,
+      userId,
+      postQuestionData.noOfAnswers || 0,
+      upVote,
+      downVote,
+    ];
+
+    await client.execute(query, params, { prepare: true });
 
     return {
       statusCode: 200,

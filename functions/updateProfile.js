@@ -1,25 +1,32 @@
 import jwt from "jsonwebtoken";
+import { Client } from "cassandra-driver";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
-import users from "../models/auth.js";
 
 dotenv.config();
 
-// Establish database connection
+const client = new Client({
+  cloud: {
+    secureConnectBundle: "secure-connect-stack-overflow.zip",
+  },
+  credentials: {
+    username: process.env.ASTRA_DB_USERNAME,
+    password: process.env.ASTRA_DB_PASSWORD,
+  },
+});
+
+const keyspace = process.env.ASTRA_DB_KEYSPACE;
+const tablename = process.env.ASTRA_DB_USERS;
+
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.CONNECTION_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("MongoDB connected");
+    await client.connect();
+    console.log("Connected to Astra DB");
   } catch (error) {
     console.error(error);
     process.exit(1);
   }
 };
 
-// Invoke the database connection
 connectDB();
 
 const auth = (handler) => async (event, context) => {
@@ -45,32 +52,30 @@ const auth = (handler) => async (event, context) => {
   }
 };
 
-exports.handler = auth (async (event, context) => {
+exports.handler = auth(async (event, context) => {
   const pathSegments = event.path.split('/');
   const _id = pathSegments[pathSegments.length - 1];
   const { name, about, tags } = JSON.parse(event.body);
 
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
-    return {
-      statusCode: 404,
-      body: "user unavailable...",
-    };
-  }
-
   try {
-    const updatedProfile = await users.findByIdAndUpdate(
-      _id,
-      { $set: { name: name, about: about, tags: tags } },
-      { new: true }
-    );
+    const updateQuery = `
+      UPDATE ${keyspace}.${tablename}
+      SET name = ?, about = ?, tags = ?
+      WHERE user_id = ?`;
+
+    const updateParams = [name, about, tags, _id];
+
+    await client.execute(updateQuery, updateParams, { prepare: true });
+
     return {
       statusCode: 200,
-      body: JSON.stringify(updatedProfile),
+      body: JSON.stringify({ message: "Profile successfully updated..." }),
     };
   } catch (error) {
+    console.error(error);
     return {
-      statusCode: 405,
-      body: JSON.stringify({ message: error.message }),
+      statusCode: 404,
+      body: JSON.stringify({ message: "Profile update failed" }),
     };
   }
 });

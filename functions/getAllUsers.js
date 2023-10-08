@@ -1,38 +1,45 @@
-import dotenv from "dotenv";
-import { MongoClient } from "mongodb";
+import { Client } from 'cassandra-driver';
+import dotenv from 'dotenv';
+
 dotenv.config();
 
 exports.handler = async function (event, context) {
-  const uri = process.env.CONNECTION_URL;
-  const databaseName= "test";
-  const collectionName= "users";
-  let client;
-  
+  const keyspace = process.env.ASTRA_DB_KEYSPACE;
+  const tableName = process.env.ASTRA_DB_USERS;
+
+  const client = new Client({
+    cloud: { secureConnectBundle: "secure-connect-stack-overflow.zip" },
+    credentials: { 
+      username: process.env.ASTRA_DB_USERNAME, 
+      password: process.env.ASTRA_DB_PASSWORD },
+  });
+
   try {
-    client = new MongoClient (uri, { useUnifiedTopology: true, useNewUrlParser: true });
     await client.connect();
-    const db = client.db(databaseName);
-    const collection = db.collection(collectionName);
-    const allUsers = await collection.find().toArray();
-    const allUserDetails = allUsers.map((user) => ({
-        _id: user._id,
-        name: user.name,
-        about: user.about,
-        tags: user.tags,
-        joinedOn: user.joinedOn,
+
+    const query = `SELECT * FROM ${keyspace}.${tableName}`;
+
+    const result = await client.execute(query, [], { prepare: true });
+
+    const allUserDetails = result.rows.map((row) => ({
+      _id: row._id,
+      name: row.name,
+      about: row.about,
+      tags: row.tags,
+      joinedOn: row.joinedon,
     }));
+
     return {
       statusCode: 200,
       body: JSON.stringify(allUserDetails),
     };
   } catch (error) {
+    console.error(error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: "Something went wrong..." }),
+      body: JSON.stringify({ message: 'Something went wrong...' }),
     };
   } finally {
-    if (client) {
-      client.close();
-    }
+    await client.shutdown();
   }
 };

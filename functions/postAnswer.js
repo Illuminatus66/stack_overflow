@@ -1,25 +1,34 @@
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
+import { Client } from "cassandra-driver";
 import dotenv from "dotenv";
-import Questions from "../models/Questions.js";
 
 dotenv.config();
+
+const client = new Client({
+  cloud: {
+    secureConnectBundle: "secure-connect-stack-overflow.zip",
+  },
+  credentials: {
+    username: process.env.ASTRA_DB_USERNAME,
+    password: process.env.ASTRA_DB_PASSWORD,
+  },
+});
+
+const keyspace = process.env.ASTRA_DB_KEYSPACE;
+const tablename1 = process.env.ASTRA_DB_QUESTIONS;
+const tablename2 = process.env.ASTRA_DB_ANSWERS;
 
 // Establish database connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.CONNECTION_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("MongoDB connected");
+    await client.connect();
+    console.log("Connected to Astra DB");
   } catch (error) {
     console.error(error);
     process.exit(1);
   }
 };
 
-// Invoke the database connection
 connectDB();
 
 const auth = (handler) => async (event, context) => {
@@ -47,42 +56,45 @@ const auth = (handler) => async (event, context) => {
 
 const updateNoOfQuestions = async (_id, noOfAnswers) => {
   try {
-    await Questions.findByIdAndUpdate(_id, {
-      $set: { noOfAnswers: noOfAnswers },
-    });
+    const query = `
+      UPDATE ${keyspace}.${tablename1}
+      SET noOfAnswers = ?
+      WHERE questionid = ?`;
+
+    const params = [noOfAnswers, _id];
+
+    await client.execute(query, params, { prepare: true });
   } catch (error) {
     console.log(error);
   }
 };
 
-exports.handler = auth (async (event, context) => {
+exports.handler = auth(async (event, context) => {
   try {
     const pathSegments = event.path.split('/');
     const _id = pathSegments[pathSegments.length - 1];
     const { noOfAnswers, answerBody, userAnswered } = JSON.parse(event.body);
     const userId = event.userId;
 
-    if (!mongoose.Types.ObjectId.isValid(_id)) {
-      return {
-        statusCode: 404,
-        body: "question unavailable...",
-      };
-    }
-
     await updateNoOfQuestions(_id, noOfAnswers);
 
-    const updatedQuestion = await Questions.findByIdAndUpdate(_id, {
-      $addToSet: { answer: [{ answerBody, userAnswered, userId }] },
-    });
+    const insertQuery = `
+      INSERT INTO ${keyspace}.${tablename2} (question_id, answer_body, user_answered, user_id, answered_on)
+      VALUES (?, ?, ?, ?, toTimestamp(now()))`;
+
+    const insertParams = [_id, answerBody, userAnswered, userId];
+
+    await client.execute(insertQuery, insertParams, { prepare: true });
 
     return {
       statusCode: 200,
-      body: JSON.stringify(updatedQuestion),
+      body: JSON.stringify({ message: "Answer posted successfully" }),
     };
   } catch (error) {
+    console.error(error);
     return {
-      statusCode: 400,
-      body: JSON.stringify({ error: "error in updating" }),
+      statusCode: 500,
+      body: JSON.stringify({ message: "Something went wrong..." }),
     };
   }
 });
