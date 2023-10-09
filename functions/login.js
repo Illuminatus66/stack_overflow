@@ -64,7 +64,7 @@ exports.handler = async function (event, context) {
     }
 
     const token = jwt.sign(
-      { email: existingUser.email, id: existingUser.userid },
+      { email: existingUser.email, id: existingUser.user_id },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );

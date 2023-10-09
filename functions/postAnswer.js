@@ -79,8 +79,8 @@ exports.handler = auth(async (event, context) => {
     await updateNoOfQuestions(_id, noOfAnswers);
 
     const insertQuery = `
-      INSERT INTO ${keyspace}.${tablename2} (question_id, answer_body, user_answered, user_id, answered_on)
-      VALUES (?, ?, ?, ?, toTimestamp(now()))`;
+      INSERT INTO ${keyspace}.${tablename2} (answer_id, question_id, answer_body, user_answered, user_id, answered_on)
+      VALUES (uuid(), ?, ?, ?, ?, toTimestamp(now()))`;
 
     const insertParams = [_id, answerBody, userAnswered, userId];
 

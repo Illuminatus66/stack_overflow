@@ -58,9 +58,16 @@ exports.handler = async function (event, context) {
     const insertParams = [name, email, hashedPassword];
 
     await client.execute(insertQuery, insertParams, { prepare: true });
+    const getUserIdQuery = `
+    SELECT user_id FROM ${keyspace}.${tablename}
+    WHERE email = ?
+    ALLOW FILTERING`;
+
+    const getUserIdResult = await client.execute(getUserIdQuery, [email], { prepare: true });
+    const user_id = getUserIdResult.first().user_id;
 
     const token = jwt.sign(
-      { email, name },
+      { email: email, user_id: user_id },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );

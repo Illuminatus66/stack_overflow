@@ -22,7 +22,7 @@ exports.handler = async function (event, context) {
     const result = await client.execute(query, [], { prepare: true });
 
     const allUserDetails = result.rows.map((row) => ({
-      _id: row._id,
+      user_id: row.user_id,
       name: row.name,
       about: row.about,
       tags: row.tags,

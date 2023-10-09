@@ -57,8 +57,8 @@ exports.handler = auth(async (event, context) => {
     const userId = event.userId;
 
     const query = `
-      INSERT INTO ${keyspace}.${tablename} (question_title, question_body, question_tags, user_posted, user_id, no_of_answers, up_vote, down_vote, asked_on)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, toTimestamp(now()))`;
+      INSERT INTO ${keyspace}.${tablename} (question_id, question_title, question_body, question_tags, user_posted, user_id, no_of_answers, up_vote, down_vote, asked_on)
+      VALUES (uuid(), ?, ?, ?, ?, ?, ?, ?, ?, toTimestamp(now()))`;
 
     const upVote = [];
     const downVote = [];
