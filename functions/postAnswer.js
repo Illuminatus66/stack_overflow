@@ -54,14 +54,14 @@ const auth = (handler) => async (event, context) => {
   }
 };
 
-const updateNoOfQuestions = async (_id, noOfAnswers) => {
+const updateNoOfQuestions = async (question_id, noOfAnswers) => {
   try {
     const query = `
       UPDATE ${keyspace}.${tablename1}
       SET noOfAnswers = ?
-      WHERE questionid = ?`;
+      WHERE question_id = ?`;
 
-    const params = [noOfAnswers, _id];
+    const params = [noOfAnswers, question_id];
 
     await client.execute(query, params, { prepare: true });
   } catch (error) {
@@ -72,17 +72,17 @@ const updateNoOfQuestions = async (_id, noOfAnswers) => {
 exports.handler = auth(async (event, context) => {
   try {
     const pathSegments = event.path.split('/');
-    const _id = pathSegments[pathSegments.length - 1];
+    const question_id = pathSegments[pathSegments.length - 1];
     const { noOfAnswers, answerBody, userAnswered } = JSON.parse(event.body);
     const userId = event.userId;
 
-    await updateNoOfQuestions(_id, noOfAnswers);
+    await updateNoOfQuestions(question_id, noOfAnswers);
 
     const insertQuery = `
-      INSERT INTO ${keyspace}.${tablename2} (answer_id, question_id, answer_body, user_answered, user_id, answered_on)
+      INSERT INTO ${keyspace}.${tablename2} (answer_id, questionId, answerBody, userAnswered, userId, answeredOn)
       VALUES (uuid(), ?, ?, ?, ?, toTimestamp(now()))`;
 
-    const insertParams = [_id, answerBody, userAnswered, userId];
+    const insertParams = [question_id, answerBody, userAnswered, userId];
 
     await client.execute(insertQuery, insertParams, { prepare: true });
 

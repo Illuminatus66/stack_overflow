@@ -10,7 +10,7 @@ const UsersList = () => {
   return (
     <div className="user-list-container">
       {users.map((user) => (
-        <User user={user} key={user?._id} />
+        <User user={user} key={user?.user_id} />
       ))}
     </div>
   );

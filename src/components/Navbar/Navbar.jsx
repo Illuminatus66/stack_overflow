@@ -86,7 +86,7 @@ const Navbar = ({ handleSlideIn }) => {
                 color="white"
               >
                 <Link
-                  to={`/Users/${User?.result?._id}`}
+                  to={`/Users/${User?.result?.user_id}`}
                   style={{ color: "white", textDecoration: "none" }}
                 >
                   {User.result.name.charAt(0).toUpperCase()}

@@ -71,17 +71,17 @@ const updateNoOfQuestions = async (_id, noOfAnswers) => {
 exports.handler = auth(async (event, context) => {
   try {
     const pathSegments = event.path.split('/');
-    const _id = pathSegments[pathSegments.length - 1];
+    const question_id = pathSegments[pathSegments.length - 1];
     const { answerId, noOfAnswers } = JSON.parse(event.body);
 
-    await updateNoOfQuestions(_id, noOfAnswers);
+    await updateNoOfQuestions(question_id, noOfAnswers);
 
     const deleteQuery = `
       DELETE FROM ${keyspace}.${tablename2}
       WHERE question_id = ?
       AND answer_id = ?`;
 
-    const deleteParams = [_id, answerId];
+    const deleteParams = [question_id, answerId];
 
     await client.execute(deleteQuery, deleteParams, { prepare: true });
 

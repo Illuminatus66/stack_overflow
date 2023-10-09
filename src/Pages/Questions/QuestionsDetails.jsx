@@ -16,7 +16,7 @@ import {
 } from "../../actions/question";
 
 const QuestionsDetails = () => {
-  const { _id } = useParams();
+  const { question_id } = useParams();
   const questionsList = useSelector((state) => state.questionsReducer);
 
   const [Answer, setAnswer] = useState("");
@@ -24,7 +24,7 @@ const QuestionsDetails = () => {
   const dispatch = useDispatch();
   const User = useSelector((state) => state.currentUserReducer);
   const location = useLocation();
-  const url = "https://stack-illuminatus66.netlify.app";
+  const url = "https://stack2-illuminatus66.netlify.app";
 
   const handlePostAns = (e, answerLength) => {
     e.preventDefault();
@@ -37,7 +37,7 @@ const QuestionsDetails = () => {
       } else {
         dispatch(
           postAnswer({
-            _id,
+            question_id,
             noOfAnswers: answerLength + 1,
             answerBody: Answer,
             userAnswered: User.result.name,
@@ -54,7 +54,7 @@ const QuestionsDetails = () => {
   };
 
   const handleDelete = () => {
-    dispatch(deleteQuestion(_id, Navigate));
+    dispatch(deleteQuestion(question_id, Navigate));
   };
 
   const handleUpVote = () => {
@@ -62,7 +62,7 @@ const QuestionsDetails = () => {
       alert("Login or Signup to up vote a question");
       Navigate("/Auth");
     } else {
-      dispatch(voteQuestion(_id, "upVote"));
+      dispatch(voteQuestion(question_id, "upVote"));
     }
   };
 
@@ -71,7 +71,7 @@ const QuestionsDetails = () => {
       alert("Login or Signup to down vote a question");
       Navigate("/Auth");
     } else {
-      dispatch(voteQuestion(_id, "downVote"));
+      dispatch(voteQuestion(question_id, "downVote"));
     }
   };
 
@@ -82,9 +82,9 @@ const QuestionsDetails = () => {
       ) : (
         <>
           {questionsList.data
-            .filter((question) => question._id === _id)
+            .filter((question) => question.question_id === question_id)
             .map((question) => (
-              <div key={question._id}>
+              <div key={question.question_id}>
                 <section className="question-details-container">
                   <h1>{question.questionTitle}</h1>
                   <div className="question-details-container-2">
@@ -117,7 +117,7 @@ const QuestionsDetails = () => {
                           <button type="button" onClick={handleShare}>
                             Share
                           </button>
-                          {User?.result?._id === question?.userId && (
+                          {User?.result?.user_id === question?.userId && (
                             <button type="button" onClick={handleDelete}>
                               Delete
                             </button>

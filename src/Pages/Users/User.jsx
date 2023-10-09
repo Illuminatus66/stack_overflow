@@ -32,7 +32,7 @@ const StyledAvatar = styled(Avatar)`
 
 const User = ({ user }) => {
   return (
-    <Link to={`/Users/${user._id}`} className="user-profile-link">
+    <Link to={`/Users/${user.user_id}`} className="user-profile-link">
       <ThemeProvider theme={customTheme}>
         <StyledAvatar><h3>{user.name.charAt(0).toUpperCase()}</h3></StyledAvatar>
       </ThemeProvider>

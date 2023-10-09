@@ -29,7 +29,7 @@ const createUserTable = async () => {
         password TEXT,
         about TEXT,
         tags SET<TEXT>,
-        joined_on TIMESTAMP
+        joinedOn TIMESTAMP
       );
     `;
 

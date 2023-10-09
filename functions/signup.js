@@ -51,13 +51,13 @@ exports.handler = async function (event, context) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const insertQuery = `
+    const insertUserQuery = `
       INSERT INTO ${keyspace}.${tablename} (user_id, name, email, password)
       VALUES (uuid(), ?, ?, ?)`;
 
-    const insertParams = [name, email, hashedPassword];
+    const insertUserParams = [name, email, hashedPassword];
 
-    await client.execute(insertQuery, insertParams, { prepare: true });
+    await client.execute(insertUserQuery, insertUserParams, { prepare: true });
     const getUserIdQuery = `
     SELECT user_id FROM ${keyspace}.${tablename}
     WHERE email = ?

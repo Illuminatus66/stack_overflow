@@ -55,7 +55,7 @@ const auth = (handler) => async (event, context) => {
 
 exports.handler = auth(async (event, context) => {
   const pathSegments = event.path.split('/');
-  const _id = pathSegments[pathSegments.length - 1];
+  const question_id = pathSegments[pathSegments.length - 1];
   const { value } = JSON.parse(event.body);
   const userId = event.userId;
 
@@ -64,7 +64,7 @@ exports.handler = auth(async (event, context) => {
       SELECT * FROM ${keyspace}.${tablename}
       WHERE question_id = ?`;
 
-    const selectParams = [_id];
+    const selectParams = [question_id];
 
     const result = await client.execute(selectQuery, selectParams, {
       prepare: true,
@@ -104,10 +104,10 @@ exports.handler = auth(async (event, context) => {
 
     const updateQuery = `
       UPDATE ${keyspace}.${tablename}
-      SET up_vote = ?, down_vote = ?
+      SET upVote = ?, downVote = ?
       WHERE question_id = ?`;
 
-    const updateParams = [question.upvote, question.downvote, _id];
+    const updateParams = [question.upvote, question.downvote, question_id];
 
     await client.execute(updateQuery, updateParams, { prepare: true });
 

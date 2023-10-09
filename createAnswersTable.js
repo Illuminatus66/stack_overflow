@@ -24,12 +24,12 @@ const createAnswersTable = async () => {
 
     const query = `
       CREATE TABLE IF NOT EXISTS ${keyspace}.${tablename} (
-        question_id UUID,
         answer_id UUID PRIMARY KEY,
-        answer_body TEXT,
-        user_answered TEXT,
-        user_id UUID,
-        answered_on TIMESTAMP,
+        questionId UUID,
+        answerBody TEXT,
+        userAnswered TEXT,
+        userId UUID,
+        answeredOn TIMESTAMP
       );
     `;
 

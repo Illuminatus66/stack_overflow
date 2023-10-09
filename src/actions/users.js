@@ -8,9 +8,9 @@ export const fetchAllUsers = () => async (dispatch) => {
     console.log(error);
   }
 };
-export const updateProfile = (_id, updateData) => async (dispatch) => {
+export const updateProfile = (user_id, updateData) => async (dispatch) => {
   try {
-    const { data } = await api.updateProfile(_id, updateData);
+    const { data } = await api.updateProfile(user_id, updateData);
     dispatch({ type: "UPDATE_CURRENT_USER", payload: data });
   } catch (error) {
     console.log(error);

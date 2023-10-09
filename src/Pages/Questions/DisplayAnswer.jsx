@@ -9,25 +9,25 @@ import { deleteAnswer } from "../../actions/question";
 const DisplayAnswer = ({ question, handleShare }) => {
   const User = useSelector((state) => state.currentUserReducer);
   // eslint-disable-next-line no-unused-vars
-  const { _id } = useParams();
+  const { question_id } = useParams();
   const dispatch = useDispatch();
-  const handleDelete = (answerId, noOfAnswers) => {
-    dispatch(deleteAnswer(_id, answerId, noOfAnswers - 1));
+  const handleDelete = (answer_id, noOfAnswers) => {
+    dispatch(deleteAnswer(question_id, answer_id, noOfAnswers - 1));
   };
   return (
     <div>
       {question.answer.map((ans) => (
-        <div className="display-ans" key={ans._id}>
+        <div className="display-ans" key={ans.answer_id}>
           <p>{ans.answerBody}</p>
           <div className="question-actions-user">
             <div>
               <button type="button" onClick={handleShare}>
                 Share
               </button>
-              {User?.result?._id === ans?.userId && (
+              {User?.result?.user_id === ans?.userId && (
                 <button
                   type="button"
-                  onClick={() => handleDelete(ans._id, question.noOfAnswers)}
+                  onClick={() => handleDelete(ans.answer_id, question.noOfAnswers)}
                 >
                   Delete
                 </button>

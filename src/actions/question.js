@@ -20,9 +20,9 @@ export const fetchAllQuestions = () => async (dispatch) => {
   }
 };
 
-export const deleteQuestion = (_id, navigate) => async (dispatch) => {
+export const deleteQuestion = (question_id, navigate) => async (dispatch) => {
   try {
-    await api.deleteQuestion(_id);
+    await api.deleteQuestion(question_id);
     dispatch(fetchAllQuestions());
     navigate("/");
   } catch (error) {
@@ -30,9 +30,9 @@ export const deleteQuestion = (_id, navigate) => async (dispatch) => {
   }
 };
 
-export const voteQuestion = (_id, value) => async (dispatch) => {
+export const voteQuestion = (question_id, value) => async (dispatch) => {
   try {
-    await api.voteQuestion(_id, value);
+    await api.voteQuestion(question_id, value);
     dispatch(fetchAllQuestions());
   } catch (error) {
     console.log(error);
@@ -41,9 +41,9 @@ export const voteQuestion = (_id, value) => async (dispatch) => {
 
 export const postAnswer = (answerData) => async (dispatch) => {
   try {
-    const { _id, noOfAnswers, answerBody, userAnswered } = answerData;
+    const { question_id, noOfAnswers, answerBody, userAnswered } = answerData;
     const { data } = await api.postAnswer(
-      _id,
+      question_id,
       noOfAnswers,
       answerBody,
       userAnswered
@@ -55,9 +55,9 @@ export const postAnswer = (answerData) => async (dispatch) => {
   }
 };
 
-export const deleteAnswer = (_id, answerId, noOfAnswers) => async (dispatch) => {
+export const deleteAnswer = (question_id, answer_id, noOfAnswers) => async (dispatch) => {
   try {
-    await api.deleteAnswer(_id, answerId, noOfAnswers);
+    await api.deleteAnswer(question_id, answer_id, noOfAnswers);
     dispatch(fetchAllQuestions());
   } catch (error) {
     console.log(error);

@@ -55,14 +55,14 @@ const auth = (handler) => async (event, context) => {
 
 exports.handler = auth(async (event, context) => {
   const pathSegments = event.path.split('/');
-  const _id = pathSegments[pathSegments.length - 1];
+  const question_id = pathSegments[pathSegments.length - 1];
 
   try {
     const deleteQuestionQuery = `
       DELETE FROM ${keyspace}.${tablename1}
       WHERE question_id = ?`;
 
-    const deleteQuestionParams = [_id];
+    const deleteQuestionParams = [question_id];
 
     await client.execute(deleteQuestionQuery, deleteQuestionParams, { prepare: true });
 
@@ -70,7 +70,7 @@ exports.handler = auth(async (event, context) => {
       DELETE FROM ${keyspace}.${tablename2}
       WHERE question_id = ?`;
     
-    const deleteAnswersParams = [_id];
+    const deleteAnswersParams = [question_id];
 
     await client.execute(deleteAnswersQuery, deleteAnswersParams, { prepare: true });
 

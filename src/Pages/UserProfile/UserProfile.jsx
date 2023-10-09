@@ -12,9 +12,9 @@ import ProfileBio from "./ProfileBio";
 import "./UsersProfile.css";
 
 const UserProfile = ({ slideIn, handleSlideIn }) => {
-  const { _id } = useParams();
+  const { user_id } = useParams();
   const users = useSelector((state) => state.usersReducer);
-  const currentProfile = users.filter((user) => user._id === _id)[0];
+  const currentProfile = users.filter((user) => user.user_id === user_id)[0];
   const currentUser = useSelector((state) => state.currentUserReducer);
   const [Switch, setSwitch] = useState(false);
 
@@ -42,7 +42,7 @@ const UserProfile = ({ slideIn, handleSlideIn }) => {
                 </p>
               </div>
             </div>
-            {currentUser?.result._id === _id && (
+            {currentUser?.result.user_id === user_id && (
               <button
                 type="button"
                 onClick={() => setSwitch(true)}

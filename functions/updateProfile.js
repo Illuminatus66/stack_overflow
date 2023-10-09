@@ -54,7 +54,7 @@ const auth = (handler) => async (event, context) => {
 
 exports.handler = auth(async (event, context) => {
   const pathSegments = event.path.split('/');
-  const _id = pathSegments[pathSegments.length - 1];
+  const user_id = pathSegments[pathSegments.length - 1];
   const { name, about, tags } = JSON.parse(event.body);
 
   try {
@@ -63,7 +63,7 @@ exports.handler = auth(async (event, context) => {
       SET name = ?, about = ?, tags = ?
       WHERE user_id = ?`;
 
-    const updateParams = [name, about, tags, _id];
+    const updateParams = [name, about, tags, user_id];
 
     await client.execute(updateQuery, updateParams, { prepare: true });
 

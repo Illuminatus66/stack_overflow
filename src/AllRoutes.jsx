@@ -24,7 +24,7 @@ const AllRoutes = ({ slideIn, handleSlideIn }) => {
         element={<Questions slideIn={slideIn} handleSlideIn={handleSlideIn} />}
       />
       <Route
-        path="/Questions/:_id"
+        path="/Questions/:question_id"
         element={
           <DisplayQuestion slideIn={slideIn} handleSlideIn={handleSlideIn} />
         }
@@ -38,7 +38,7 @@ const AllRoutes = ({ slideIn, handleSlideIn }) => {
         element={<Users slideIn={slideIn} handleSlideIn={handleSlideIn} />}
       />
       <Route
-        path="/Users/:_id"
+        path="/Users/:user_id"
         element={
           <UserProfile slideIn={slideIn} handleSlideIn={handleSlideIn} />
         }

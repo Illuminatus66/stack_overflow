@@ -26,7 +26,7 @@ exports.handler = async function (event, context) {
       name: row.name,
       about: row.about,
       tags: row.tags,
-      joinedOn: row.joinedon,
+      joinedOn: row.joinedOn,
     }));
 
     return {
