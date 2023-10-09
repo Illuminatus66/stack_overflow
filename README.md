@@ -1,67 +1,33 @@
-# Clone of Stack Overflow built for CI/CD SPA hosting services, offering serverless capacities
+# Stack Overflow Clone for CI/CD SPA Hosting Services with Serverless Capabilities
 
-## Link - https://stack-illuminatus66.netlify.app/
+## [Link to Website](https://stack-illuminatus66.netlify.app/)
 
-## Development build
+### Development Build
 
-This project was initially developed on localhost by setting up an Express.js server 
-and routes to accompany different actions that were executed on a MongoDB Atlas cluster.
+This project began with the setup of an Express.js server on a local environment. It included routes to handle various actions executed on a MongoDB Atlas cluster.
 
-The server listened to HTTP requests from Axios' intuitive, simple and fast API interface.
-The endpoints obviously looked very different when Express.js was being used.
-The connection to the database was simpler. The applcation of JWT middleware for 
-authentication purposes was simpler, too.
+The server processed HTTP requests using Axios, an intuitive and fast API interface. During the Express.js phase, the endpoints had a different appearance. Connecting to the database and applying JWT middleware for authentication was more straightforward.
 
-Of course, SEO tradeoffs need to be taken into consideration but the nature of the
-website is such that the question list needs to be requested after the skeleton of
-the application loads. Maybe someone could try rendering an entire initial landing page on 
-the server-side so headless browsers could crawl the home page.
+While considering SEO trade-offs, it's worth noting that the application initially loads the skeleton of the page before fetching the question list. There's room for improvement, such as rendering an initial HTML-only snapshot on the server-side to improve crawlability by headless browsers.
 
-If you want, you could try your hand at generating an initial HTML-only snapshot of
-the current build while the Javascript loads ( I do not possess enough knowledge for that). 
+If you're interested, you can explore techniques for generating an initial HTML-only snapshot while JavaScript loads, although I lack expertise in this area.
 
+### Hosting on Separate Platforms
 
-## Hosting on separate platforms
+You have the option to host the serverless functions separately on platforms like AWS Lambda, Azure, Vercel, or Netlify. Keep in mind that some syntax adjustments may be necessary based on your chosen platform.
 
-If you want you could separately host the serverless functions on something like 
-AWS Lambda, Azure, Vercel or ##Netlify, though some changes might need to be done
-regarding the syntax based on the platform of your choice.
+The front-end is a React SPA, offering ample flexibility. I opted to host it on Netlify to leverage their free-tier services.
 
-The front-end is a React SPA, so you can go crazy with that. I hosted it on Netlify 
-to take advantage of their free-tier services.
+In case you decide to host the React app and functions separately, remember to configure CORS settings. I, however, chose to host them under a single domain to simplify header management.
 
-If you do decide to host the React app and the functions separately, don't forget to 
-allow CORS but I hosted them under one domain so that I don't have to worry about the 
-request headers too much.
+### Build Command
 
-## Build command
+The build command remains the familiar "npm run build".
 
-The build command, as always, is "npm run build"
+### Cold-Start Issues
 
-### Cold-start issues
+I acknowledge that the application may appear slow during startup. I plan to host it on AWS to compare request speeds, as AWS is reputed for superior performance.
 
-Yes, I realise the application seems really slow when starting-up, I will try hosting it 
-on AWS to compare the speed of the requests, I hear it is much better than it's competitors
+### Sharing Links to Questions
 
-### Cannot share links to questions
-
-Due to the nomenclature of serverless functions, I still haven't been able to figure out 
-a way to name the app urls in a manner such that, the relevant function could execute all
-on it's own if someone simply pastes the URL of the question details page. If you would like
-to help, please let me know.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://react.dev/learn).
+Due to the structure of serverless functions, I've encountered challenges in naming app URLs so that relevant functions can execute independently when someone pastes the URL of a question details page. If you have insights to offer on this matter, please reach out.
