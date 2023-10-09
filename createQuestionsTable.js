@@ -22,14 +22,13 @@ const createNewQuestionsTable = async () => {
     await client.connect();
     console.log('Connected to AstraDB.');
 
-    // Drop the old 'questions' table
+    // Drop the old 'questions' table if it exists
     const dropQuery = `
       DROP TABLE IF EXISTS ${keyspace}.${tablename};
     `;
 
     await client.execute(dropQuery);
 
-    // Create a new 'questions' table without references to 'answers'
     const createQuery = `
       CREATE TABLE IF NOT EXISTS ${keyspace}.${tablename} (
         question_id UUID PRIMARY KEY,
