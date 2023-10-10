@@ -27,7 +27,7 @@ exports.handler = async function (event, context) {
     const queryAnswers = `SELECT * FROM ${keyspace}.${answersTable}`;
 
     const questions = await client.execute(queryQuestions, [], { prepare: true });
-    const answer = await client.execute(queryAnswers, [], { prepare: true });
+    const answers = await client.execute(queryAnswers, [], { prepare: true });
 
     // Create a map to store questions with their associated answers.
     const questionMap = new Map();
@@ -35,12 +35,12 @@ exports.handler = async function (event, context) {
     questions.rows.forEach((question) => {
       questionMap.set(question.question_id, {
         ...question,
-        answer: [],
+        answers: [],
       });
     });
 
-    // Populate the 'answers' array within the amswers.
-    answer.rows.forEach((answer) => {
+    // Populate the 'answers' array within the answers.
+    answers.rows.forEach((answer) => {
       const question_id = answer.question_id;
 
       if (questionMap.has(question_id)) {
