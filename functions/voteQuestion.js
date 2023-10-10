@@ -66,7 +66,7 @@ exports.handler = auth(async (event, context) => {
   try {
     const selectQuestionQuery = `
       SELECT * FROM ${keyspace}.${questionsTable}
-      WHERE user_id = ? AND question_id = ?`;
+      WHERE user_id = ? AND question_id = ? ALLOW FILTERING`;
 
     const selectQuestionParams = [user_id, question_id];
 
