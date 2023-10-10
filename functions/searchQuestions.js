@@ -1,16 +1,19 @@
 import dotenv from "dotenv";
 import { Client } from 'cassandra-driver';
+import path from 'path';
 
 dotenv.config();
+
+const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
 
 exports.handler = async function (event, context) {
   const { query } = event.queryStringParameters;
   const keyspace = process.env.ASTRA_DB_KEYSPACE;
-  const tablename = process.env.ASTRA_DB_QUESTIONS;
+  const questionsTable = process.env.ASTRA_DB_QUESTIONS;
 
   const client = new Client({
     cloud: { 
-      secureConnectBundle: "secure-connect-stack-overflow.zip",
+      secureConnectBundle: filePath,
     },
     credentials: { 
       username: process.env.ASTRA_DB_USERNAME,
@@ -21,8 +24,9 @@ exports.handler = async function (event, context) {
   try {
     await client.connect();
     const searchquery = `
-      SELECT * FROM ${keyspace}.${tablename}
-      WHERE solr_query='${query}' LIMIT 30;`;
+      SELECT * FROM ${keyspace}.${questionsTable}
+      WHERE solr_query='${query}' LIMIT 30;
+      ALLOW FILTERING`;
 
     const searchResults = await client.execute(searchquery);
 

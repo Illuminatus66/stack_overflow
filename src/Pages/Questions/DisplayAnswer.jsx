@@ -8,35 +8,34 @@ import { deleteAnswer } from "../../actions/question";
 
 const DisplayAnswer = ({ question, handleShare }) => {
   const User = useSelector((state) => state.currentUserReducer);
-  // eslint-disable-next-line no-unused-vars
   const { question_id } = useParams();
   const dispatch = useDispatch();
-  const handleDelete = (answer_id, noOfAnswers) => {
-    dispatch(deleteAnswer(question_id, answer_id, noOfAnswers - 1));
+  const handleDelete = (answer_id, noofanswers) => {
+    dispatch(deleteAnswer(question_id, answer_id, noofanswers - 1));
   };
   return (
     <div>
       {question.answer.map((ans) => (
         <div className="display-ans" key={ans.answer_id}>
-          <p>{ans.answerBody}</p>
+          <p>{ans.answerbody}</p>
           <div className="question-actions-user">
             <div>
               <button type="button" onClick={handleShare}>
                 Share
               </button>
-              {User?.result?.user_id === ans?.userId && (
+              {User?.result?.user_id === ans?.user_id && (
                 <button
                   type="button"
-                  onClick={() => handleDelete(ans.answer_id, question.noOfAnswers)}
+                  onClick={() => handleDelete(ans.answer_id, question.noofanswers)}
                 >
                   Delete
                 </button>
               )}
             </div>
             <div>
-              <p>answered {moment(ans.answeredOn).fromNow()} by</p>
+              <p>answered {moment(ans.answeredon).fromNow()} by</p>
               <Link
-                to={`/Users/${ans.userId}`}
+                to={`/Users/${ans.user_id}`}
                 className="user-link"
                 style={{ color: "#0086d8" }}
               >
@@ -46,9 +45,9 @@ const DisplayAnswer = ({ question, handleShare }) => {
                   py="5px"
                   borderRadius="6px"
                 >
-                  {ans.userAnswered.charAt(0).toUpperCase()}
+                  {ans.useranswered.charAt(0).toUpperCase()}
                 </Avatar>
-                <div>{ans.userAnswered}</div>
+                <div>{ans.useranswered}</div>
               </Link>
             </div>
           </div>

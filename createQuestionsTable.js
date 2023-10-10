@@ -32,15 +32,14 @@ const createNewQuestionsTable = async () => {
     const createQuery = `
       CREATE TABLE IF NOT EXISTS ${keyspace}.${tablename} (
         question_id UUID PRIMARY KEY,
-        questionTitle TEXT,
-        questionBody TEXT,
-        questionTags SET<TEXT>,
-        noOfAnswers INT,
-        upVote SET<TEXT>,
-        downVote SET<TEXT>,
-        userPosted TEXT,
-        userId UUID,
-        askedOn TIMESTAMP,
+        questiontitle TEXT,
+        questionbody TEXT,
+        questiontags SET<TEXT>,
+        noofanswers INT,
+        vote_count INT,
+        userposted TEXT,
+        user_id UUID,
+        askedon TIMESTAMP,
       );
     `;
 

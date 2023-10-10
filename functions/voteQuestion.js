@@ -1,12 +1,16 @@
+//This file has a lot more comments than usual because there are a lot of nested queries and if-else blocks and inline if-else statements
 import jwt from "jsonwebtoken";
 import { Client } from "cassandra-driver";
 import dotenv from "dotenv";
+import path from 'path';
 
 dotenv.config();
 
+const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
+
 const client = new Client({
   cloud: {
-    secureConnectBundle: "secure-connect-stack-overflow.zip",
+    secureConnectBundle: filePath,
   },
   credentials: {
     username: process.env.ASTRA_DB_USERNAME,
@@ -15,9 +19,9 @@ const client = new Client({
 });
 
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
-const tablename = process.env.ASTRA_DB_QUESTIONS;
+const questionsTable = process.env.ASTRA_DB_QUESTIONS; //using tablename1 and tablename2 was a stupid idea, this is much better
+const votesTable = process.env.ASTRA_DB_VOTES; 
 
-// Establish database connection
 const connectDB = async () => {
   try {
     await client.connect();
@@ -42,7 +46,7 @@ const auth = (handler) => async (event, context) => {
 
     const token = authorizationHeader.split(" ")[1];
     let decodeData = jwt.verify(token, process.env.JWT_SECRET);
-    event.userId = decodeData?.id;
+    event.user_id = decodeData?.user_id;
     return await handler(event, context);
   } catch (error) {
     console.log(error);
@@ -57,59 +61,90 @@ exports.handler = auth(async (event, context) => {
   const pathSegments = event.path.split('/');
   const question_id = pathSegments[pathSegments.length - 1];
   const { value } = JSON.parse(event.body);
-  const userId = event.userId;
+  const user_id = event.user_id;
 
   try {
-    const selectQuery = `
-      SELECT * FROM ${keyspace}.${tablename}
+    const selectQuestionQuery = `
+      SELECT * FROM ${keyspace}.${questionsTable}
       WHERE question_id = ?`;
 
-    const selectParams = [question_id];
+    const selectQuestionParams = [question_id];
 
-    const result = await client.execute(selectQuery, selectParams, {
+    const resultQuestion = await client.execute(selectQuestionQuery, selectQuestionParams, {
       prepare: true,
     });
-
-    if (result.rows.length === 0) {
+    // this if block is not so important, but it's a good habit to check the existence of an entry first
+    if (resultQuestion.rows.length === 0) {
       return {
         statusCode: 404,
-        body: "Question unavailable...",
+        body: JSON.stringify({ message: "Question unavailable..." }),
       };
     }
 
-    const question = result.rows[0];
+    const question = resultQuestion.rows[0];
 
-    const upIndex = question.upvote.findIndex((id) => id === userId);
-    const downIndex = question.downvote.findIndex((id) => id === userId);
+    // Check if the user has already voted on this question
+    const selectVoteQuery = `
+      SELECT * FROM ${keyspace}.${votesTable}
+      WHERE user_id = ? AND question_id = ?`;
 
-    if (value === "upVote") {
-      if (downIndex !== -1) {
-        question.downvote.splice(downIndex, 1);
+    const selectVoteParams = [user_id, question_id];
+
+    const resultVote = await client.execute(selectVoteQuery, selectVoteParams, {
+      prepare: true,
+    });
+
+    // Function enters this block if no vote has been registered earlier
+    if (resultVote.rows.length === 0) {
+      // The vote_count field in the questions table simply gets incremented/decremented by 1 when a user votes on a question for the first time
+      if (value === "upvote") {
+        question.vote_count += 1;
+      } else if (value === "downvote") {
+        question.vote_count -= 1;
       }
-      if (upIndex === -1) {
-        question.upvote.push(userId);
+
+      // Create a new entry for the user's vote inside the votes table depending on the value retrieved from the QuestionsDetails page
+      const insertVoteQuery = `
+        INSERT INTO ${keyspace}.${votesTable} (user_id, question_id, vote_value)
+        VALUES (?, ?, ?)`;
+
+      const insertVoteParams = [user_id, question_id, value === "upvote" ? 1 : -1];
+
+      await client.execute(insertVoteQuery, insertVoteParams, {
+        prepare: true,
+      });
+    } else {
+      // Function enters this else block if there is already an existing entry for a user's vote on a particular question
+      const existingVote = resultVote.rows[0];
+
+      // Function enters if block, if the user has previously upvoted the question and has now pressed he upvote button again
+      if (value === "upvote" && existingVote.vote_value === 1) {
+        // Since user has already upvoted, remove the vote entry from the votes table altogether
+        question.vote_count -= 1;
+        await client.execute(`DELETE FROM ${keyspace}.${votesTable} WHERE user_id = ? AND question_id = ?`, [user_id, question_id], { prepare: true });
+
+        //Function enters else if block, if the user has previously downvoted the question and has now pressed the downvote button again
+      } else if (value === "downvote" && existingVote.vote_value === -1) {
+        // Since user has already downvoted, remove the vote entry from the votes table altogether
+        question.vote_count += 1;
+        await client.execute(`DELETE FROM ${keyspace}.${votesTable} WHERE user_id = ? AND question_id = ?`, [user_id, question_id], { prepare: true });
+
+        //Function enters the final else block if the values from the current button click and the value present inside the votes table are dissimilar
+        //This is the case when the user has previously upvoted the question and has now pressed the downvote button or vice-versa which means we have
+        //to account for the nullification of the previous vote and the incrementing/decrementing action, based on the current vote.
       } else {
-        question.upvote.splice(upIndex, 1);
-      }
-    } else if (value === "downVote") {
-      if (upIndex !== -1) {
-        question.upvote.splice(upIndex, 1);
-      }
-      if (downIndex === -1) {
-        question.downvote.push(userId);
-      } else {
-        question.downvote.splice(downIndex, 1);
+        if (value === "upvote") {
+          question.vote_count += 2;
+        } else if (value === "downvote") {
+          question.vote_count -= 2;
+        }
+
+        await client.execute(`UPDATE ${keyspace}.${votesTable} SET vote_value = ? WHERE user_id = ? AND question_id = ?`, [value === "upvote" ? 1 : -1, user_id, question_id], { prepare: true });
       }
     }
 
-    const updateQuery = `
-      UPDATE ${keyspace}.${tablename}
-      SET upVote = ?, downVote = ?
-      WHERE question_id = ?`;
-
-    const updateParams = [question.upvote, question.downvote, question_id];
-
-    await client.execute(updateQuery, updateParams, { prepare: true });
+    // Update the vote_count in the questions table
+    await client.execute(`UPDATE ${keyspace}.${questionsTable} SET vote_count = ? WHERE question_id = ?`, [question.vote_count, question_id], { prepare: true });
 
     return {
       statusCode: 200,

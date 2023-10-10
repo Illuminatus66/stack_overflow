@@ -8,9 +8,9 @@ import "./AskQuestion.css";
 
 const maxSelectedTags = 5;
 const AskQuestion = () => {
-  const [questionTitle, setQuestionTitle] = useState("");
-  const [questionBody, setQuestionBody] = useState("");
-  const [questionTags, setQuestionTags] = useState([]);
+  const [questiontitle, setQuestionTitle] = useState("");
+  const [questionbody, setQuestionBody] = useState("");
+  const [questiontags, setQuestionTags] = useState([]);
 
   const dispatch = useDispatch();
   const User = useSelector((state) => state.currentUserReducer);
@@ -19,14 +19,14 @@ const AskQuestion = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (User) {
-      if (questionTitle && questionBody && questionTags.length > 0) {
+      if (questiontitle && questionbody && questiontags.length > 0) {
         dispatch(
           askQuestion(
             {
-              questionTitle,
-              questionBody,
-              questionTags,
-              userPosted: User.result.name,
+              questiontitle,
+              questionbody,
+              questiontags,
+              userposted: User.result.name,
             },
             navigate
           )
@@ -41,7 +41,7 @@ const AskQuestion = () => {
 
   const handleEnter = (e) => {
     if (e.key === "Enter") {
-      setQuestionBody(questionBody + "\n");
+      setQuestionBody(questionbody + "\n");
     }
   };
 
@@ -100,7 +100,7 @@ const AskQuestion = () => {
                   multiple
                   labelId="ask-ques-tags-label"
                   id="ask-ques-tags"
-                  value={questionTags}
+                  value={questiontags}
                   onChange={handleTagChange}
                   renderValue={(selected) => (
                     <div>

@@ -38,9 +38,9 @@ const QuestionsDetails = () => {
         dispatch(
           postAnswer({
             question_id,
-            noOfAnswers: answerLength + 1,
-            answerBody: Answer,
-            userAnswered: User.result.name,
+            noofanswers: answerLength + 1,
+            answerbody: Answer,
+            useranswered: User.result.name,
           })
         );
         setAnswer("");
@@ -62,7 +62,7 @@ const QuestionsDetails = () => {
       alert("Login or Signup to up vote a question");
       Navigate("/Auth");
     } else {
-      dispatch(voteQuestion(question_id, "upVote"));
+      dispatch(voteQuestion(question_id, "upvote"));
     }
   };
 
@@ -71,7 +71,7 @@ const QuestionsDetails = () => {
       alert("Login or Signup to down vote a question");
       Navigate("/Auth");
     } else {
-      dispatch(voteQuestion(question_id, "downVote"));
+      dispatch(voteQuestion(question_id, "downvote"));
     }
   };
 
@@ -86,29 +86,29 @@ const QuestionsDetails = () => {
             .map((question) => (
               <div key={question.question_id}>
                 <section className="question-details-container">
-                  <h1>{question.questionTitle}</h1>
+                  <h1>{question.questiontitle}</h1>
                   <div className="question-details-container-2">
                     <div className="question-votes">
                       <img
                         src={upvote}
-                        alt=""
+                        alt="upvote button"
                         width="18"
                         className="votes-icon"
                         onClick={handleUpVote}
                       />
-                      <p>{question.upVote.length - question.downVote.length}</p>
+                      <p>{question.vote_count}</p>
                       <img
                         src={downvote}
-                        alt=""
+                        alt="downvote button"
                         width="18"
                         className="votes-icon"
                         onClick={handleDownVote}
                       />
                     </div>
                     <div style={{ width: "100%" }}>
-                      <p className="question-body">{question.questionBody}</p>
+                      <p className="question-body">{question.questionbody}</p>
                       <div className="question-details-tags">
-                        {question.questionTags.map((tag) => (
+                        {question.questiontags.map((tag) => (
                           <p key={tag}>{tag}</p>
                         ))}
                       </div>
@@ -117,16 +117,16 @@ const QuestionsDetails = () => {
                           <button type="button" onClick={handleShare}>
                             Share
                           </button>
-                          {User?.result?.user_id === question?.userId && (
+                          {User?.result?.user_id === question?.user_id && (
                             <button type="button" onClick={handleDelete}>
                               Delete
                             </button>
                           )}
                         </div>
                         <div>
-                          <p>asked {moment(question.askedOn).fromNow()}</p>
+                          <p>asked {moment(question.askedon).fromNow()}</p>
                           <Link
-                            to={`/Users/${question.userId}`}
+                            to={`/Users/${question.user_id}`}
                             className="user-link"
                             style={{ color: "#0086d8" }}
                           >
@@ -136,20 +136,20 @@ const QuestionsDetails = () => {
                               py="5px"
                               borderRadius="4px"
                             >
-                              {question.userPosted.charAt(0).toUpperCase()}
+                              {question.userposted.charAt(0).toUpperCase()}
                             </Avatar>
-                            <div>{question.userPosted}</div>
+                            <div>{question.userposted}</div>
                           </Link>
                         </div>
                       </div>
                     </div>
                   </div>
                 </section>
-                {question.noOfAnswers !== 0 && (
+                {question.noofanswers !== 0 && (
                   <section>
-                    <h3>{question.noOfAnswers} Answers</h3>
+                    <h3>{question.noofanswers} Answers</h3>
                     <DisplayAnswer
-                      key={question._id}
+                      key={question.question_id}
                       question={question}
                       handleShare={handleShare}
                     />
@@ -179,7 +179,7 @@ const QuestionsDetails = () => {
                   </form>
                   <p>
                     Browse other Question tagged
-                    {question.questionTags.map((tag) => (
+                    {question.questiontags.map((tag) => (
                       <Link to="/Tags" key={tag} className="ans-tags">
                         {" "}
                         {tag}{" "}

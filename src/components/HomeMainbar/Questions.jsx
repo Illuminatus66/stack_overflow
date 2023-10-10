@@ -6,30 +6,30 @@ const Questions = ({ question }) => {
   return (
     <div className="display-question-container">
       <div className="display-votes-ans">
-        <p>{question.upVote.length - question.downVote.length}</p>
+        <p>{question.vote_count}</p>
         <p>votes</p>
       </div>
       <div className="display-votes-ans">
-        <p>{question.noOfAnswers}</p>
+        <p>{question.noofanswers}</p>
         <p>answers</p>
       </div>
       <div className="display-question-details">
         <Link to={`/Questions/${question.question_id}`} className="question-title-link">
-          {question.questionTitle.length > (window.innerWidth <= 400 ? 70 : 90)
-            ? question.questionTitle.substring(
+          {question.questiontitle.length > (window.innerWidth <= 400 ? 70 : 90)
+            ? question.questiontitle.substring(
                 0,
                 window.innerWidth <= 400 ? 70 : 90
               ) + "..."
-            : question.questionTitle}
+            : question.questiontitle}
         </Link>
         <div className="display-tags-time">
           <div className="display-tags">
-            {question.questionTags.map((tag) => (
+            {question.questiontags.map((tag) => (
               <p key={tag}>{tag}</p>
             ))}
           </div>
           <p className="display-time">
-            asked {moment(question.askedOn).fromNow()} {question.userPosted}
+            asked {moment(question.askedon).fromNow()} {question.userposted}
           </p>
         </div>
       </div>

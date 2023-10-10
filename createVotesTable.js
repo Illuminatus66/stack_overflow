@@ -13,7 +13,7 @@ const client = new Client({
 });
 
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
-const tablename = process.env.ASTRA_DB_USERS;
+const tablename = process.env.ASTRA_DB_VOTES;
 
 const createUserTable = async () => {
   try {
@@ -24,12 +24,8 @@ const createUserTable = async () => {
     const query = `
       CREATE TABLE IF NOT EXISTS ${keyspace}.${tablename} (
         user_id UUID PRIMARY KEY,
-        name TEXT,
-        email TEXT,
-        password TEXT,
-        about TEXT,
-        tags SET<TEXT>,
-        joinedon TIMESTAMP
+        question_id UUID,
+        vote_value INT,
       );
     `;
 
@@ -39,7 +35,6 @@ const createUserTable = async () => {
   } catch (error) {
     console.error('Error:', error.message);
   } finally {
-    // Ensure that the client is closed, whether an error occurred or not.
     await client.shutdown();
     console.log('AstraDB connection closed.');
   }

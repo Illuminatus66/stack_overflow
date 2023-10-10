@@ -38,7 +38,7 @@ const UserProfile = ({ slideIn, handleSlideIn }) => {
                 <h1>{currentProfile?.name}</h1>
                 <p>
                   <FontAwesomeIcon icon={faBirthdayCake} /> Joined{" "}
-                  {moment(currentProfile?.joinedOn).fromNow()}
+                  {moment(currentProfile?.joinedon).fromNow()}
                 </p>
               </div>
             </div>

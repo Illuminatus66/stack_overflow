@@ -1,15 +1,18 @@
 import { Client } from 'cassandra-driver';
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
 
+const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
+
 exports.handler = async function (event, context) {
   const keyspace = process.env.ASTRA_DB_KEYSPACE;
-  const tableName1 = process.env.ASTRA_DB_QUESTIONS;
-  const tableName2 = process.env.ASTRA_DB_ANSWERS;
+  const questionsTable = process.env.ASTRA_DB_QUESTIONS;
+  const answersTable = process.env.ASTRA_DB_ANSWERS;
   const client = new Client({
     cloud: {
-      secureConnectBundle: "secure-connect-stack-overflow.zip"
+      secureConnectBundle: filePath
     },
     credentials: {
       username: process.env.ASTRA_DB_USERNAME,
@@ -20,11 +23,11 @@ exports.handler = async function (event, context) {
   try {
     await client.connect();
 
-    const queryQuestions = `SELECT * FROM ${keyspace}.${tableName1}`;
-    const queryAnswers = `SELECT * FROM ${keyspace}.${tableName2}`;
+    const queryQuestions = `SELECT * FROM ${keyspace}.${questionsTable}`;
+    const queryAnswers = `SELECT * FROM ${keyspace}.${answersTable}`;
 
     const questions = await client.execute(queryQuestions, [], { prepare: true });
-    const answers = await client.execute(queryAnswers, [], { prepare: true });
+    const answer = await client.execute(queryAnswers, [], { prepare: true });
 
     // Create a map to store questions with their associated answers.
     const questionMap = new Map();
@@ -32,25 +35,25 @@ exports.handler = async function (event, context) {
     questions.rows.forEach((question) => {
       questionMap.set(question.question_id, {
         ...question,
-        answers: [],
+        answer: [],
       });
     });
 
     // Populate the 'answers' array within the amswers.
-    answers.rows.forEach((answer) => {
-      const questionId = answer.question_id;
+    answer.rows.forEach((answer) => {
+      const question_id = answer.question_id;
 
-      if (questionMap.has(questionId)) {
-        questionMap.get(questionId).answers.push(answer);
+      if (questionMap.has(question_id)) {
+        questionMap.get(question_id).answer.push(answer);
       }
     });
 
     // Convert the map to an array of questions with answers.
-    const questionsWithAnswers = Array.from(questionMap.values());
+    const questionList = Array.from(questionMap.values());
 
     return {
       statusCode: 200,
-      body: JSON.stringify(questionsWithAnswers),
+      body: JSON.stringify(questionList),
     };
   } catch (error) {
     console.error(error);

@@ -2,12 +2,15 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { Client } from "cassandra-driver";
 import dotenv from "dotenv";
+import path from 'path';
 
 dotenv.config();
 
+const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
+
 const client = new Client({
   cloud: {
-    secureConnectBundle: "secure-connect-stack-overflow.zip",
+    secureConnectBundle: filePath,
   },
   credentials: {
     username: process.env.ASTRA_DB_USERNAME,
@@ -16,7 +19,7 @@ const client = new Client({
 });
 
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
-const tablename = process.env.ASTRA_DB_USERS;
+const usersTable = process.env.ASTRA_DB_USERS;
 
 const connectDB = async () => {
   try {
@@ -35,8 +38,9 @@ exports.handler = async function (event, context) {
 
   try {
     const query = `
-      SELECT * FROM ${keyspace}.${tablename}
-      WHERE email = ?`;
+      SELECT * FROM ${keyspace}.${usersTable}
+      WHERE email = ?
+      ALLOW FILTERING`;
 
     const params = [email];
 
@@ -64,7 +68,7 @@ exports.handler = async function (event, context) {
     }
 
     const token = jwt.sign(
-      { email: existingUser.email, id: existingUser.user_id },
+      { email: existingUser.email, user_id: existingUser.user_id },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );

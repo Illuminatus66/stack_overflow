@@ -1,12 +1,15 @@
 import jwt from "jsonwebtoken";
 import { Client } from "cassandra-driver";
 import dotenv from "dotenv";
+import path from 'path';
 
 dotenv.config();
 
+const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
+
 const client = new Client({
   cloud: {
-    secureConnectBundle: "secure-connect-stack-overflow.zip",
+    secureConnectBundle: filePath,
   },
   credentials: {
     username: process.env.ASTRA_DB_USERNAME,
@@ -14,7 +17,7 @@ const client = new Client({
   },
 });
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
-const tablename = process.env.ASTRA_DB_QUESTIONS;
+const questionsTable = process.env.ASTRA_DB_QUESTIONS;
 
 const connectDB = async () => {
   try {
@@ -40,7 +43,7 @@ const auth = (handler) => async (event, context) => {
 
     const token = authorizationHeader.split(" ")[1];
     let decodeData = jwt.verify(token, process.env.JWT_SECRET);
-    event.userId = decodeData?.id;
+    event.user_id = decodeData?.user_id;
     return await handler(event, context);
   } catch (error) {
     console.log(error);
@@ -53,25 +56,23 @@ const auth = (handler) => async (event, context) => {
 
 exports.handler = auth(async (event, context) => {
   try {
-    const postQuestionData = JSON.parse(event.body);
-    const userId = event.userId;
+    const questionData = JSON.parse(event.body);
+    const user_id = event.user_id;
 
     const query = `
-      INSERT INTO ${keyspace}.${tablename} (question_id, questionTitle, questionBody, questionTags, userPosted, userId, noOfAnswers, upVote, downVote, askedOn)
-      VALUES (uuid(), ?, ?, ?, ?, ?, ?, ?, ?, toTimestamp(now()))`;
+      INSERT INTO ${keyspace}.${questionsTable} (question_id, questiontitle, questionbody, questiontags, userposted, user_id, noofanswers, vote_count, askedon)
+      VALUES (uuid(), ?, ?, ?, ?, ?, ?, ?, toTimestamp(now()))`;
 
-    const upVote = [];
-    const downVote = [];
-
+    const vote_count = 0;
+    const noofanswers = 0;
     const params = [
-      postQuestionData.questionTitle,
-      postQuestionData.questionBody,
-      postQuestionData.questionTags,
-      postQuestionData.userPosted,
-      userId,
-      postQuestionData.noOfAnswers || 0,
-      upVote,
-      downVote,
+      questionData.questiontitle,
+      questionData.questionbody,
+      questionData.questiontags,
+      questionData.userposted,
+      user_id,
+      noofanswers,
+      vote_count,
     ];
 
     await client.execute(query, params, { prepare: true });

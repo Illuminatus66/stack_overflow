@@ -1,12 +1,15 @@
 import jwt from "jsonwebtoken";
 import { Client } from "cassandra-driver";
 import dotenv from "dotenv";
+import path from 'path';
 
 dotenv.config();
 
+const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
+
 const client = new Client({
   cloud: {
-    secureConnectBundle: "secure-connect-stack-overflow.zip",
+    secureConnectBundle: filePath,
   },
   credentials: {
     username: process.env.ASTRA_DB_USERNAME,
@@ -15,8 +18,8 @@ const client = new Client({
 });
 
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
-const tablename1 = process.env.ASTRA_DB_QUESTIONS;
-const tablename2 = process.env.ASTRA_DB_ANSWERS;
+const questionsTable = process.env.ASTRA_DB_QUESTIONS;
+const answersTable = process.env.ASTRA_DB_ANSWERS;
 
 const connectDB = async () => {
   try {
@@ -42,7 +45,7 @@ const auth = (handler) => async (event, context) => {
 
     const token = authorizationHeader.split(" ")[1];
     let decodeData = jwt.verify(token, process.env.JWT_SECRET);
-    event.userId = decodeData?.id;
+    event.user_id = decodeData?.user_id;
     return await handler(event, context);
   } catch (error) {
     console.log(error);
@@ -53,14 +56,14 @@ const auth = (handler) => async (event, context) => {
   }
 };
 
-const updateNoOfQuestions = async (_id, noOfAnswers) => {
+const updateNoOfQuestions = async (question_id, noofanswers) => {
   try {
     const query = `
-      UPDATE ${keyspace}.${tablename1}
-      SET no_of_answers  = ?
+      UPDATE ${keyspace}.${questionsTable}
+      SET noofanswers  = ?
       WHERE question_id = ?`;
 
-    const params = [noOfAnswers, _id];
+    const params = [noofanswers, question_id];
 
     await client.execute(query, params, { prepare: true });
   } catch (error) {
@@ -72,16 +75,16 @@ exports.handler = auth(async (event, context) => {
   try {
     const pathSegments = event.path.split('/');
     const question_id = pathSegments[pathSegments.length - 1];
-    const { answerId, noOfAnswers } = JSON.parse(event.body);
+    const { answer_id, noofanswers } = JSON.parse(event.body);
 
-    await updateNoOfQuestions(question_id, noOfAnswers);
+    await updateNoOfQuestions(question_id, noofanswers);
 
     const deleteQuery = `
-      DELETE FROM ${keyspace}.${tablename2}
+      DELETE FROM ${keyspace}.${answersTable}
       WHERE question_id = ?
       AND answer_id = ?`;
 
-    const deleteParams = [question_id, answerId];
+    const deleteParams = [question_id, answer_id];
 
     await client.execute(deleteQuery, deleteParams, { prepare: true });
 

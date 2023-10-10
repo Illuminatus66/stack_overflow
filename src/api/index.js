@@ -26,10 +26,10 @@ export const voteQuestion = (question_id, value) =>
 export const searchQuestions = (query) =>
   API.get(`/.netlify/functions/searchQuestions?query=${query}`);
   
-export const postAnswer = (question_id, noOfAnswers, answerBody, userAnswered) =>
-  API.patch(`/.netlify/functions/postAnswer/${question_id}`, { noOfAnswers, answerBody, userAnswered }, { withCredentials: true });
-export const deleteAnswer = (question_id, answer_id, noOfAnswers) =>
-  API.patch(`/.netlify/functions/deleteAnswer/${question_id}`, { answer_id, noOfAnswers }, { withCredentials: true });
+export const postAnswer = (question_id, noofanswers, answerbody, useranswered) =>
+  API.patch(`/.netlify/functions/postAnswer/${question_id}`, { noofanswers, answerbody, useranswered }, { withCredentials: true });
+export const deleteAnswer = (question_id, answer_id, noofanswers) =>
+  API.patch(`/.netlify/functions/deleteAnswer/${question_id}`, { answer_id, noofanswers }, { withCredentials: true });
 
 export const getAllUsers = () => API.get("/.netlify/functions/getAllUsers");
 export const updateProfile = (user_id, updateData) =>

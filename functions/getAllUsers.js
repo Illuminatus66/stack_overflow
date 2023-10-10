@@ -1,14 +1,19 @@
 import { Client } from 'cassandra-driver';
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
 
+const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
+
 exports.handler = async function (event, context) {
   const keyspace = process.env.ASTRA_DB_KEYSPACE;
-  const tableName = process.env.ASTRA_DB_USERS;
+  const usersTable = process.env.ASTRA_DB_USERS;
 
   const client = new Client({
-    cloud: { secureConnectBundle: "secure-connect-stack-overflow.zip" },
+    cloud: { 
+      secureConnectBundle: filePath 
+    },
     credentials: { 
       username: process.env.ASTRA_DB_USERNAME, 
       password: process.env.ASTRA_DB_PASSWORD },
@@ -17,7 +22,7 @@ exports.handler = async function (event, context) {
   try {
     await client.connect();
 
-    const query = `SELECT * FROM ${keyspace}.${tableName}`;
+    const query = `SELECT * FROM ${keyspace}.${usersTable}`;
 
     const result = await client.execute(query, [], { prepare: true });
 
@@ -26,7 +31,7 @@ exports.handler = async function (event, context) {
       name: row.name,
       about: row.about,
       tags: row.tags,
-      joinedOn: row.joinedOn,
+      joinedon: row.joinedon,
     }));
 
     return {

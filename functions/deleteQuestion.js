@@ -1,12 +1,15 @@
 import jwt from "jsonwebtoken";
 import { Client } from "cassandra-driver";
 import dotenv from "dotenv";
+import path from 'path';
 
 dotenv.config();
 
+const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
+
 const client = new Client({
   cloud: {
-    secureConnectBundle: "secure-connect-stack-overflow.zip",
+    secureConnectBundle: filePath,
   },
   credentials: {
     username: process.env.ASTRA_DB_USERNAME,
@@ -15,8 +18,8 @@ const client = new Client({
 });
 
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
-const tablename1 = process.env.ASTRA_DB_QUESTIONS;
-const tablename2 = process.env.ASTRA_DB_ANSWERS;
+const questionsTable = process.env.ASTRA_DB_QUESTIONS;
+const answersTable = process.env.ASTRA_DB_ANSWERS;
 
 const connectDB = async () => {
   try {
@@ -42,7 +45,7 @@ const auth = (handler) => async (event, context) => {
 
     const token = authorizationHeader.split(" ")[1];
     let decodeData = jwt.verify(token, process.env.JWT_SECRET);
-    event.userId = decodeData?.id;
+    event.user_id = decodeData?.user_id;
     return await handler(event, context);
   } catch (error) {
     console.log(error);
@@ -59,7 +62,7 @@ exports.handler = auth(async (event, context) => {
 
   try {
     const deleteQuestionQuery = `
-      DELETE FROM ${keyspace}.${tablename1}
+      DELETE FROM ${keyspace}.${questionsTable}
       WHERE question_id = ?`;
 
     const deleteQuestionParams = [question_id];
@@ -67,7 +70,7 @@ exports.handler = auth(async (event, context) => {
     await client.execute(deleteQuestionQuery, deleteQuestionParams, { prepare: true });
 
     const deleteAnswersQuery = `
-      DELETE FROM ${keyspace}.${tablename2}
+      DELETE FROM ${keyspace}.${answersTable}
       WHERE question_id = ?`;
     
     const deleteAnswersParams = [question_id];

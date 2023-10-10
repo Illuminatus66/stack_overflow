@@ -2,12 +2,15 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { Client } from "cassandra-driver";
 import dotenv from "dotenv";
+import path from 'path';
 
 dotenv.config();
 
+const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
+
 const client = new Client({
   cloud: {
-    secureConnectBundle: "secure-connect-stack-overflow.zip",
+    secureConnectBundle: filePath,
   },
   credentials: {
     username: process.env.ASTRA_DB_USERNAME,
@@ -16,7 +19,7 @@ const client = new Client({
 });
 
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
-const tablename = process.env.ASTRA_DB_USERS;
+const usersTable = process.env.ASTRA_DB_USERS;
 
 const connectDB = async () => {
   try {
@@ -35,8 +38,9 @@ exports.handler = async function (event, context) {
 
   try {
     const query = `
-      SELECT * FROM ${keyspace}.${tablename}
-      WHERE email = ?`;
+      SELECT * FROM ${keyspace}.${usersTable}
+      WHERE email = ?
+      ALLOW FILTERING`;
 
     const params = [email];
 
@@ -52,14 +56,15 @@ exports.handler = async function (event, context) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const insertUserQuery = `
-      INSERT INTO ${keyspace}.${tablename} (user_id, name, email, password)
-      VALUES (uuid(), ?, ?, ?)`;
+      INSERT INTO ${keyspace}.${usersTable} ( user_id, name, email, password, joinedon)
+      VALUES (uuid(), ?, ?, ?, toTimestamp(now()))`;
 
     const insertUserParams = [name, email, hashedPassword];
 
     await client.execute(insertUserQuery, insertUserParams, { prepare: true });
+
     const getUserIdQuery = `
-    SELECT user_id FROM ${keyspace}.${tablename}
+    SELECT user_id FROM ${keyspace}.${usersTable}
     WHERE email = ?
     ALLOW FILTERING`;
 
