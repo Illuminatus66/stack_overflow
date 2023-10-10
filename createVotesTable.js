@@ -23,9 +23,10 @@ const createUserTable = async () => {
 
     const query = `
       CREATE TABLE IF NOT EXISTS ${keyspace}.${tablename} (
-        user_id UUID PRIMARY KEY,
+        user_id UUID,
         question_id UUID,
         vote_value INT,
+        PRIMARY KEY (user_id, question_id)
       );
     `;
 
