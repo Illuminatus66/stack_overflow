@@ -39,7 +39,7 @@ const createNewQuestionsTable = async () => {
         vote_count INT,
         userposted TEXT,
         user_id UUID,
-        askedon TIMESTAMP,
+        askedon TIMESTAMP
       );
     `;
 

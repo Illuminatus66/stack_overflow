@@ -74,15 +74,16 @@ exports.handler = auth(async (event, context) => {
 
     const fetchUpdatedUserParams = [user_id];
 
-    await client.execute(profileUpdateQuery, profileUpdateParams, { prepare: true });
-    const updatedUser = await client.execute(fetchUpdatedUserQuery, fetchUpdatedUserParams, { prepare: true });
+    const result= await client.execute(profileUpdateQuery, profileUpdateParams, { prepare: true });
 
-
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify(updatedUser),
-    };
+    if (result) {
+      const updatedUser = await client.execute(fetchUpdatedUserQuery, fetchUpdatedUserParams, { prepare: true });
+      const data = updatedUser.rows[0]
+      return { 
+        statusCode: 200,
+        body: JSON.stringify(data),
+      };
+    }
   } catch (error) {
     console.error(error);
     return {

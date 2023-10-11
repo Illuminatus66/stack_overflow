@@ -23,13 +23,14 @@ const createUserTable = async () => {
 
     const query = `
       CREATE TABLE IF NOT EXISTS ${keyspace}.${tablename} (
-        user_id UUID PRIMARY KEY,
+        user_id UUID,
         name TEXT,
         email TEXT,
         password TEXT,
         about TEXT,
         tags SET<TEXT>,
-        joinedon TIMESTAMP
+        joinedon TIMESTAMP,
+        PRIMARY KEY (user_id, email)
       );
     `;
 

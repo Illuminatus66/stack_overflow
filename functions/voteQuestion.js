@@ -86,7 +86,7 @@ exports.handler = auth(async (event, context) => {
     // Check if the user has already voted on this question
     const selectVoteQuery = `
       SELECT * FROM ${keyspace}.${votesTable}
-      WHERE user_id = ? AND question_id = ? ALLOW FILTERING`;
+      WHERE user_id = ? AND question_id = ?`;
 
     const selectVoteParams = [user_id, question_id];
 

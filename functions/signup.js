@@ -39,8 +39,7 @@ exports.handler = async function (event, context) {
   try {
     const query = `
       SELECT * FROM ${keyspace}.${usersTable}
-      WHERE email = ?
-      ALLOW FILTERING`;
+      WHERE email = ?`;
 
     const params = [email];
 
@@ -65,8 +64,7 @@ exports.handler = async function (event, context) {
 
     const getUserIdQuery = `
     SELECT user_id FROM ${keyspace}.${usersTable}
-    WHERE email = ?
-    ALLOW FILTERING`;
+    WHERE email = ?`;
 
     const getUserIdResult = await client.execute(getUserIdQuery, [email], { prepare: true });
     const user_id = getUserIdResult.first().user_id;
