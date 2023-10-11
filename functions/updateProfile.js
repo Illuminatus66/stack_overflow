@@ -68,11 +68,20 @@ exports.handler = auth(async (event, context) => {
 
     const profileUpdateParams = [name, about, tags, user_id];
 
+    const fetchUpdatedUserQuery = `
+      SELECT * FROM ${keyspace}.${usersTable}
+      WHERE user_id = ?`
+
+    const fetchUpdatedUserParams = [user_id];
+
     await client.execute(profileUpdateQuery, profileUpdateParams, { prepare: true });
+    const updatedUser = await client.execute(fetchUpdatedUserQuery, fetchUpdatedUserParams, { prepare: true });
+
+
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Profile successfully updated..." }),
+      body: JSON.stringify(updatedUser),
     };
   } catch (error) {
     console.error(error);
