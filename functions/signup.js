@@ -39,7 +39,8 @@ exports.handler = async function (event, context) {
   try {
     const query = `
       SELECT * FROM ${keyspace}.${usersTable}
-      WHERE email = ?`;
+      WHERE email = ?
+      ALLOW FILTERING`;
 
     const params = [email];
 
