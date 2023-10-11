@@ -65,7 +65,8 @@ exports.handler = async function (event, context) {
 
     const getUserIdQuery = `
     SELECT user_id FROM ${keyspace}.${usersTable}
-    WHERE email = ?`;
+    WHERE email = ?
+    ALLOW FILTERING`;
 
     const getUserIdResult = await client.execute(getUserIdQuery, [email], { prepare: true });
     const user_id = getUserIdResult.first().user_id;
