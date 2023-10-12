@@ -89,19 +89,9 @@ exports.handler = auth(async (event, context) => {
 
     await client.execute(insertQuery, insertParams, { prepare: true });
 
-    // Query the question with its associated answers
-    const queryQuestion = `SELECT * FROM ${keyspace}.${questionsTable} WHERE question_id = ?`;
-    const queryAnswers = `SELECT * FROM ${keyspace}.${answersTable} WHERE question_id = ?`;
-
-    const updatedQuestion = (await client.execute(queryQuestion, [question_id], { prepare: true })).rows[0];
-    const answers = await client.execute(queryAnswers, [question_id], { prepare: true });
-
-    // Add answers to the question object
-    updatedQuestion.answers = answers.rows;
-
     return {
       statusCode: 200,
-      body: JSON.stringify(updatedQuestion),
+      body: JSON.stringify({message: "Answer posted successfully!"}),
     };
   } catch (error) {
     console.error(error);

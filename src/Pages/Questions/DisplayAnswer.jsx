@@ -15,7 +15,7 @@ const DisplayAnswer = ({ question, handleShare }) => {
   };
   return (
     <div>
-      {question.answer.map((ans) => (
+      {question.answers.map((ans) => (
         <div className="display-ans" key={ans.answer_id}>
           <p>{ans.answerbody}</p>
           <div className="question-actions-user">
