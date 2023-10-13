@@ -77,9 +77,11 @@ exports.handler = async function (event, context) {
       { expiresIn: "1h" }
     );
 
+    console.log(`Congratulations! A new user with user_id: ${user_id} has signed up!`)
+
     return {
       statusCode: 201,
-      body: JSON.stringify({ result: { name, email }, token }),
+      body: JSON.stringify({ result: { name, email, user_id }, token }),
     };
   } catch (error) {
     console.error(error);

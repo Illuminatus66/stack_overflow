@@ -74,12 +74,13 @@ const updateNoOfQuestions = async (question_id, noofanswers) => {
 
 exports.handler = auth(async (event, context) => {
   try {
-    const pathSegments = event.path.split('/');
-    const question_id = pathSegments[pathSegments.length - 1];
-    const { noofanswers, answerbody, useranswered } = JSON.parse(event.body);
+    const { question_id, noofanswers, answerbody, useranswered } = JSON.parse(event.body);
     const user_id = event.user_id;
+    console.log(question_id, noofanswers, answerbody, useranswered, user_id);
 
     await updateNoOfQuestions(question_id, noofanswers);
+
+    console.log(`Number of answers associated to question ${question_id} has been updated to ${noofanswers} `)
 
     const insertQuery = `
       INSERT INTO ${keyspace}.${answersTable} (answer_id, question_id, answerbody, useranswered, user_id, answeredon)
@@ -88,6 +89,8 @@ exports.handler = auth(async (event, context) => {
     const insertParams = [question_id, answerbody, useranswered, user_id];
 
     await client.execute(insertQuery, insertParams, { prepare: true });
+
+    console.log(`A new answer associated to question ${question_id} has been posted by ${useranswered} having user_id ${user_id}`)
 
     return {
       statusCode: 200,

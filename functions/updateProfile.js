@@ -74,16 +74,17 @@ exports.handler = auth(async (event, context) => {
 
     const fetchUpdatedUserParams = [user_id];
 
-    const result= await client.execute(profileUpdateQuery, profileUpdateParams, { prepare: true });
+    await client.execute(profileUpdateQuery, profileUpdateParams, { prepare: true });
 
-    if (result) {
-      const updatedUser = await client.execute(fetchUpdatedUserQuery, fetchUpdatedUserParams, { prepare: true });
-      const data = updatedUser.rows[0]
-      return { 
-        statusCode: 200,
-        body: JSON.stringify(data),
-      };
-    }
+    const updatedUser = await client.execute(fetchUpdatedUserQuery, fetchUpdatedUserParams, { prepare: true });
+    const data = updatedUser.rows[0];
+    
+    console.log(`User ${name} with user_id: ${user_id} has made changes to their profile`);
+
+    return { 
+      statusCode: 200,
+      body: JSON.stringify(data),
+    };
   } catch (error) {
     console.error(error);
     return {
@@ -92,3 +93,4 @@ exports.handler = auth(async (event, context) => {
     };
   }
 });
+

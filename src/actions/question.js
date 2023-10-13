@@ -53,9 +53,14 @@ export const postAnswer = (answerData) => async (dispatch) => {
   }
 };
 
-export const deleteAnswer = (question_id, answer_id, noofanswers) => async (dispatch) => {
+export const deleteAnswer = (answerData) => async (dispatch) => {
   try {
-    await api.deleteAnswer(question_id, answer_id, noofanswers);
+    const { question_id, noofanswers, answer_id } = answerData;
+    await api.deleteAnswer(
+      question_id, 
+      answer_id, 
+      noofanswers
+      );
     dispatch(fetchAllQuestions());
   } catch (error) {
     console.log(error);

@@ -4,7 +4,7 @@ import path from 'path';
 
 dotenv.config();
 
-const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
+const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip');
 
 exports.handler = async function (event, context) {
   const keyspace = process.env.ASTRA_DB_KEYSPACE;
@@ -19,10 +19,8 @@ exports.handler = async function (event, context) {
       password: process.env.ASTRA_DB_PASSWORD,
     },
   });
-
   try {
     await client.connect();
-
     const queryQuestions = `SELECT * FROM ${keyspace}.${questionsTable}`;
     const queryAnswers = `SELECT * FROM ${keyspace}.${answersTable}`;
 
@@ -33,22 +31,24 @@ exports.handler = async function (event, context) {
     const questionMap = new Map();
 
     questions.rows.forEach((question) => {
-      questionMap.set(question.question_id, {
+      const questionId = question.question_id;
+      questionMap.set(questionId, {
         ...question,
         answers: [],
       });
     });
 
-    // Populate the 'answers' array within the answers.
+    // Answer associated with each question
     answers.rows.forEach((answer) => {
-      const question_id = answer.question_id;
+      const questionId = answer.question_id;
 
-      if (questionMap.has(question_id)) {
-        questionMap.get(question_id).answer.push(answer);
+      for (const [key, value] of questionMap.entries()) {
+        if (questionId.equals(key)) {
+          value.answers.push(answer);
+        }
       }
     });
 
-    // Convert the map to an array of questions with answers.
     const questionList = Array.from(questionMap.values());
 
     return {

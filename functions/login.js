@@ -73,6 +73,8 @@ exports.handler = async function (event, context) {
       { expiresIn: "1h" }
     );
 
+    console.log(`User ${existingUser.name} with user_id ${existingUser.user_id} has just logged in`);
+
     return {
       statusCode: 200,
       body: JSON.stringify({ result: existingUser, token }),

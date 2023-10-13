@@ -159,7 +159,7 @@ const QuestionsDetails = () => {
                   <h3>Your Answer</h3>
                   <form
                     onSubmit={(e) => {
-                      handlePostAns(e, question.answer.length);
+                      handlePostAns(e, question.noofanswers);
                     }}
                   >
                     <textarea

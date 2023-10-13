@@ -73,11 +73,11 @@ const updateNoOfQuestions = async (question_id, noofanswers) => {
 
 exports.handler = auth(async (event, context) => {
   try {
-    const pathSegments = event.path.split('/');
-    const question_id = pathSegments[pathSegments.length - 1];
-    const { answer_id, noofanswers } = JSON.parse(event.body);
+    const { question_id, answer_id, noofanswers } = JSON.parse(event.body)
 
     await updateNoOfQuestions(question_id, noofanswers);
+
+    console.log(`Updated number of answers for question_id ${question_id} to ${noofanswers}`);
 
     const deleteQuery = `
       DELETE FROM ${keyspace}.${answersTable}
@@ -88,12 +88,15 @@ exports.handler = auth(async (event, context) => {
 
     await client.execute(deleteQuery, deleteParams, { prepare: true });
 
+    console.log(`Successfully deleted answer where question_id: ${question_id} and answer_id: ${answer_id}`);
+
     return {
       statusCode: 200,
       body: JSON.stringify({ message: "Successfully deleted..." }),
     };
   } catch (error) {
-    console.error(error);
+    console.error("Error:", error);
+
     return {
       statusCode: 500,
       body: JSON.stringify({ message: "Something went wrong..." }),

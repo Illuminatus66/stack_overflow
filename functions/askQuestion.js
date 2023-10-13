@@ -44,6 +44,7 @@ const auth = (handler) => async (event, context) => {
     const token = authorizationHeader.split(" ")[1];
     let decodeData = jwt.verify(token, process.env.JWT_SECRET);
     event.user_id = decodeData?.user_id;
+    console.log("Authentication successful");
     return await handler(event, context);
   } catch (error) {
     console.log(error);
@@ -56,26 +57,20 @@ const auth = (handler) => async (event, context) => {
 
 exports.handler = auth(async (event, context) => {
   try {
-    const questionData = JSON.parse(event.body);
+    const { questiontitle, questionbody, questiontags, userposted } = JSON.parse(event.body);
     const user_id = event.user_id;
+    const vote_count = 0;
+    const noofanswers = 0;
 
     const query = `
       INSERT INTO ${keyspace}.${questionsTable} (question_id, questiontitle, questionbody, questiontags, userposted, user_id, noofanswers, vote_count, askedon)
       VALUES (uuid(), ?, ?, ?, ?, ?, ?, ?, toTimestamp(now()))`;
 
-    const vote_count = 0;
-    const noofanswers = 0;
-    const params = [
-      questionData.questiontitle,
-      questionData.questionbody,
-      questionData.questiontags,
-      questionData.userposted,
-      user_id,
-      noofanswers,
-      vote_count,
-    ];
+    const params = [questiontitle, questionbody, questiontags, userposted, user_id, noofanswers, vote_count];
 
     await client.execute(query, params, { prepare: true });
+
+    console.log(`A new question has been posted successfully by ${userposted} having user_id: ${user_id}`);
 
     return {
       statusCode: 200,

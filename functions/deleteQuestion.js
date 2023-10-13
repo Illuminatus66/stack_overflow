@@ -77,6 +77,8 @@ exports.handler = auth(async (event, context) => {
 
     await client.execute(deleteAnswersQuery, deleteAnswersParams, { prepare: true });
 
+    console.log(`Question and it's associated answers with question_id : ${question_id} have been successfully deleted...`)
+
     return {
       statusCode: 200,
       body: JSON.stringify({ message: "Question and associated answer successfully deleted..." }),

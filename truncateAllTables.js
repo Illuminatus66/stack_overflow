@@ -25,7 +25,7 @@ const truncateAllTables = async () => {
 
     for (const row of result.rows) {
       const tableName = row.table_name;
-      const truncateQuery = `TRUNCATE TABLE IF EXISTS ${keyspace}.${tableName}`;
+      const truncateQuery = `TRUNCATE TABLE ${keyspace}.${tableName}`;
       await client.execute(truncateQuery);
       console.log(`Truncated table: ${keyspace}.${tableName}`);
     }
