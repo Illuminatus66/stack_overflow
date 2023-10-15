@@ -22,18 +22,6 @@ const keyspace = process.env.ASTRA_DB_KEYSPACE;
 const questionsTable = process.env.ASTRA_DB_QUESTIONS; //using tablename1 and tablename2 was a stupid idea, this is much better
 const votesTable = process.env.ASTRA_DB_VOTES; 
 
-const connectDB = async () => {
-  try {
-    await client.connect();
-    console.log("Connected to Astra DB");
-  } catch (error) {
-    console.error(error);
-    process.exit(1);
-  }
-};
-
-connectDB();
-
 const auth = (handler) => async (event, context) => {
   try {
     const authorizationHeader = event.headers && event.headers.authorization;
@@ -64,6 +52,8 @@ exports.handler = auth(async (event, context) => {
   const user_id = event.user_id;
 
   try {
+    await client.connect();
+    
     const selectQuestionQuery = `
       SELECT * FROM ${keyspace}.${questionsTable}
       WHERE question_id = ?`;

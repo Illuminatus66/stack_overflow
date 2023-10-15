@@ -21,19 +21,6 @@ const keyspace = process.env.ASTRA_DB_KEYSPACE;
 const questionsTable = process.env.ASTRA_DB_QUESTIONS;
 const answersTable = process.env.ASTRA_DB_ANSWERS;
 
-// Establish database connection
-const connectDB = async () => {
-  try {
-    await client.connect();
-    console.log("Connected to Astra DB");
-  } catch (error) {
-    console.error(error);
-    process.exit(1);
-  }
-};
-
-connectDB();
-
 const auth = (handler) => async (event, context) => {
   try {
     const authorizationHeader = event.headers && event.headers.authorization;
@@ -73,11 +60,12 @@ const updateNoOfQuestions = async (question_id, noofanswers) => {
 };
 
 exports.handler = auth(async (event, context) => {
-  try {
-    const { question_id, noofanswers, answerbody, useranswered } = JSON.parse(event.body);
-    const user_id = event.user_id;
-    console.log(question_id, noofanswers, answerbody, useranswered, user_id);
+  const { question_id, noofanswers, answerbody, useranswered } = JSON.parse(event.body);
+  const user_id = event.user_id;
 
+  try {
+    await client.connect();
+    
     await updateNoOfQuestions(question_id, noofanswers);
 
     console.log(`Number of answers associated to question ${question_id} has been updated to ${noofanswers} `)

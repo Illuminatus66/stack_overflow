@@ -21,22 +21,12 @@ const client = new Client({
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
 const usersTable = process.env.ASTRA_DB_USERS;
 
-const connectDB = async () => {
-  try {
-    await client.connect();
-    console.log("Connected to Astra DB");
-  } catch (error) {
-    console.error(error);
-    process.exit(1);
-  }
-};
-
-connectDB();
-
 exports.handler = async function (event, context) {
   const { email, password } = JSON.parse(event.body);
 
   try {
+    await client.connect();
+    
     const query = `
       SELECT * FROM ${keyspace}.${usersTable}
       WHERE email = ?

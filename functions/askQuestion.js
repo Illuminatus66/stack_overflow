@@ -19,18 +19,6 @@ const client = new Client({
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
 const questionsTable = process.env.ASTRA_DB_QUESTIONS;
 
-const connectDB = async () => {
-  try {
-    await client.connect();
-    console.log("Connected to Cassandra");
-  } catch (error) {
-    console.error(error);
-    process.exit(1);
-  }
-};
-
-connectDB();
-
 const auth = (handler) => async (event, context) => {
   try {
     const authorizationHeader = event.headers && event.headers.authorization;
@@ -56,11 +44,14 @@ const auth = (handler) => async (event, context) => {
 };
 
 exports.handler = auth(async (event, context) => {
+  
+  const { questiontitle, questionbody, questiontags, userposted } = JSON.parse(event.body);
+  const user_id = event.user_id;
+  const vote_count = 0;
+  const noofanswers = 0;
+  
   try {
-    const { questiontitle, questionbody, questiontags, userposted } = JSON.parse(event.body);
-    const user_id = event.user_id;
-    const vote_count = 0;
-    const noofanswers = 0;
+    await client.connect();
 
     const query = `
       INSERT INTO ${keyspace}.${questionsTable} (question_id, questiontitle, questionbody, questiontags, userposted, user_id, noofanswers, vote_count, askedon)

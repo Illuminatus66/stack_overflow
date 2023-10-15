@@ -20,18 +20,6 @@ const client = new Client({
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
 const usersTable = process.env.ASTRA_DB_USERS;
 
-const connectDB = async () => {
-  try {
-    await client.connect();
-    console.log("Connected to Astra DB");
-  } catch (error) {
-    console.error(error);
-    process.exit(1);
-  }
-};
-
-connectDB();
-
 const auth = (handler) => async (event, context) => {
   try {
     const authorizationHeader = event.headers && event.headers.authorization;
@@ -61,6 +49,8 @@ exports.handler = auth(async (event, context) => {
   const { name, about, tags } = JSON.parse(event.body);
 
   try {
+    await client.connect();
+    
     const profileUpdateQuery = `
       UPDATE ${keyspace}.${usersTable}
       SET name = ?, about = ?, tags = ?
