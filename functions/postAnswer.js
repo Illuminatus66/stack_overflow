@@ -90,5 +90,7 @@ exports.handler = auth(async (event, context) => {
       statusCode: 500,
       body: JSON.stringify({ message: "Something went wrong..." }),
     };
+  } finally {
+    await client.shutdown();
   }
 });

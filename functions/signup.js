@@ -79,5 +79,7 @@ exports.handler = async function (event, context) {
       statusCode: 500,
       body: JSON.stringify({ message: "Something went wrong..." }),
     };
+  } finally {
+    await client.shutdown();
   }
 };

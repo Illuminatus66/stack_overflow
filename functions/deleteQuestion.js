@@ -5,33 +5,11 @@ import path from 'path';
 
 dotenv.config();
 
-const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
-
-const client = new Client({
-  cloud: {
-    secureConnectBundle: filePath,
-  },
-  credentials: {
-    username: process.env.ASTRA_DB_USERNAME,
-    password: process.env.ASTRA_DB_PASSWORD,
-  },
-});
+const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip');
 
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
 const questionsTable = process.env.ASTRA_DB_QUESTIONS;
 const answersTable = process.env.ASTRA_DB_ANSWERS;
-
-const connectDB = async () => {
-  try {
-    await client.connect();
-    console.log("Connected to Astra DB");
-  } catch (error) {
-    console.error(error);
-    process.exit(1);
-  }
-};
-
-connectDB();
 
 const auth = (handler) => async (event, context) => {
   try {
@@ -57,37 +35,48 @@ const auth = (handler) => async (event, context) => {
 };
 
 exports.handler = auth(async (event, context) => {
+  const client = new Client({
+    cloud: {
+      secureConnectBundle: filePath,
+    },
+    credentials: {
+      username: process.env.ASTRA_DB_USERNAME,
+      password: process.env.ASTRA_DB_PASSWORD,
+    },
+  });
+
   const pathSegments = event.path.split('/');
   const question_id = pathSegments[pathSegments.length - 1];
 
   try {
-    const deleteQuestionQuery = `
-      DELETE FROM ${keyspace}.${questionsTable}
-      WHERE question_id = ?`;
+    await client.connect();
 
-    const deleteQuestionParams = [question_id];
+    const batchQueries = [
+      {
+        query: `DELETE FROM ${keyspace}.${questionsTable} WHERE question_id = ?`,
+        params: [question_id],
+      },
+      {
+        query: `DELETE FROM ${keyspace}.${answersTable} WHERE question_id = ?`,
+        params: [question_id],
+      }
+    ];
 
-    await client.execute(deleteQuestionQuery, deleteQuestionParams, { prepare: true });
+    await client.batch(batchQueries, { prepare: true });
 
-    const deleteAnswersQuery = `
-      DELETE FROM ${keyspace}.${answersTable}
-      WHERE question_id = ?`;
-    
-    const deleteAnswersParams = [question_id];
-
-    await client.execute(deleteAnswersQuery, deleteAnswersParams, { prepare: true });
-
-    console.log(`Question and it's associated answers with question_id : ${question_id} have been successfully deleted...`)
+    console.log(`Question and its associated answers with question_id: ${question_id} have been successfully deleted...`);
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Question and associated answer successfully deleted..." }),
+      body: JSON.stringify({ message: "Question and associated answers successfully deleted..." }),
     };
   } catch (error) {
     console.error(error);
     return {
-      statusCode: 404,
+      statusCode: 500,
       body: JSON.stringify({ message: "Question and answer deletion failed" }),
     };
+  } finally {
+    await client.shutdown();
   }
 });

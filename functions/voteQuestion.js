@@ -146,5 +146,7 @@ exports.handler = auth(async (event, context) => {
       statusCode: 404,
       body: JSON.stringify({ message: "Vote update failed" }),
     };
+  } finally {
+    await client.shutdown();
   }
 });

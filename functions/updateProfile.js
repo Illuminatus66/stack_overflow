@@ -81,6 +81,8 @@ exports.handler = auth(async (event, context) => {
       statusCode: 404,
       body: JSON.stringify({ message: "Profile update failed" }),
     };
+  } finally {
+    await client.shutdown();
   }
 });
 

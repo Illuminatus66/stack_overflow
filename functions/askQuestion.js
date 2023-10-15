@@ -73,5 +73,7 @@ exports.handler = auth(async (event, context) => {
       statusCode: 409,
       body: JSON.stringify("Couldn't post a new question"),
     };
+  } finally {
+    await client.shutdown();
   }
 });
