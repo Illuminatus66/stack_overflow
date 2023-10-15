@@ -19,37 +19,24 @@ exports.handler = async function (event, context) {
       password: process.env.ASTRA_DB_PASSWORD,
     },
   });
+
   try {
     await client.connect();
+
     const queryQuestions = `SELECT * FROM ${keyspace}.${questionsTable}`;
-    const queryAnswers = `SELECT * FROM ${keyspace}.${answersTable}`;
-
     const questions = await client.execute(queryQuestions, [], { prepare: true });
-    const answers = await client.execute(queryAnswers, [], { prepare: true });
 
-    // Create a map to store questions with their associated answers.
-    const questionMap = new Map();
+    const queryAnswers = `SELECT * FROM ${keyspace}.${answersTable} WHERE question_id = ?`;
+    const preparedAnswerQuery = client.prepare(queryAnswers);
 
-    questions.rows.forEach((question) => {
+    const questionList = await Promise.all(questions.rows.map(async (question) => {
       const questionId = question.question_id;
-      questionMap.set(questionId, {
+      const answers = await client.execute(preparedAnswerQuery, [questionId], { prepare: true });
+      return {
         ...question,
-        answers: [],
-      });
-    });
-
-    // Answer associated with each question
-    answers.rows.forEach((answer) => {
-      const questionId = answer.question_id;
-
-      for (const [key, value] of questionMap.entries()) {
-        if (questionId.equals(key)) {
-          value.answers.push(answer);
-        }
-      }
-    });
-
-    const questionList = Array.from(questionMap.values());
+        answers: answers.rows,
+      };
+    }));
 
     return {
       statusCode: 200,
