@@ -7,6 +7,21 @@ dotenv.config();
 
 const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip');
 
+const client = new Client({
+  cloud: {
+    secureConnectBundle: filePath,
+  },
+  credentials: {
+    username: process.env.ASTRA_DB_USERNAME,
+    password: process.env.ASTRA_DB_PASSWORD,
+  },
+});
+
+client.connect().catch(error => {
+  console.error('Failed to connect to the database:', error);
+  process.exit(1);
+});
+
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
 const questionsTable = process.env.ASTRA_DB_QUESTIONS;
 const answersTable = process.env.ASTRA_DB_ANSWERS;
@@ -35,22 +50,10 @@ const auth = (handler) => async (event, context) => {
 };
 
 exports.handler = auth(async (event, context) => {
-  const client = new Client({
-    cloud: {
-      secureConnectBundle: filePath,
-    },
-    credentials: {
-      username: process.env.ASTRA_DB_USERNAME,
-      password: process.env.ASTRA_DB_PASSWORD,
-    },
-  });
-
   const pathSegments = event.path.split('/');
   const question_id = pathSegments[pathSegments.length - 1];
 
   try {
-    await client.connect();
-
     const batchQueries = [
       {
         query: `DELETE FROM ${keyspace}.${questionsTable} WHERE question_id = ?`,
@@ -76,7 +79,5 @@ exports.handler = auth(async (event, context) => {
       statusCode: 500,
       body: JSON.stringify({ message: "Question and answer deletion failed" }),
     };
-  } finally {
-    await client.shutdown();
   }
 });

@@ -9,13 +9,18 @@ dotenv.config();
 const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
 
 const client = new Client({
-  cloud: {
+  cloud: { 
     secureConnectBundle: filePath,
   },
-  credentials: {
+  credentials: { 
     username: process.env.ASTRA_DB_USERNAME,
     password: process.env.ASTRA_DB_PASSWORD,
   },
+});
+
+client.connect().catch(error => {
+  console.error('Failed to connect to the database:', error);
+  process.exit(1);
 });
 
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
@@ -25,8 +30,6 @@ exports.handler = async function (event, context) {
   const { name, email, password } = JSON.parse(event.body);
 
   try {
-    await client.connect();
-    
     const query = `
       SELECT * FROM ${keyspace}.${usersTable}
       WHERE email = ?
@@ -79,7 +82,5 @@ exports.handler = async function (event, context) {
       statusCode: 500,
       body: JSON.stringify({ message: "Something went wrong..." }),
     };
-  } finally {
-    await client.shutdown();
   }
 };

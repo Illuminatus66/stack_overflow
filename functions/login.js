@@ -18,6 +18,11 @@ const client = new Client({
   },
 });
 
+client.connect().catch(error => {
+  console.error('Failed to connect to the database:', error);
+  process.exit(1);
+});
+
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
 const usersTable = process.env.ASTRA_DB_USERS;
 
@@ -25,8 +30,6 @@ exports.handler = async function (event, context) {
   const { email, password } = JSON.parse(event.body);
 
   try {
-    await client.connect();
-    
     const query = `
       SELECT * FROM ${keyspace}.${usersTable}
       WHERE email = ?
@@ -74,7 +77,5 @@ exports.handler = async function (event, context) {
       statusCode: 500,
       body: JSON.stringify({ message: "Something went wrong..." }),
     };
-  } finally {
-    await client.shutdown();
   }
 };

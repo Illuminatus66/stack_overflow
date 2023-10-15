@@ -18,6 +18,11 @@ const client = new Client({
   },
 });
 
+client.connect().catch(error => {
+  console.error('Failed to connect to the database:', error);
+  process.exit(1);
+});
+
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
 const questionsTable = process.env.ASTRA_DB_QUESTIONS; //using tablename1 and tablename2 was a stupid idea, this is much better
 const votesTable = process.env.ASTRA_DB_VOTES; 
@@ -52,18 +57,10 @@ exports.handler = auth(async (event, context) => {
   const user_id = event.user_id;
 
   try {
-    await client.connect();
-    
-    const selectQuestionQuery = `
-      SELECT * FROM ${keyspace}.${questionsTable}
-      WHERE question_id = ?`;
+    //selects the needed question from the questions table
+    const resultQuestion =  await client.execute(`SELECT * FROM ${keyspace}.${questionsTable} WHERE question_id = ?`, [question_id], { prepare: true });
 
-    const selectQuestionParams = [question_id];
-
-    const resultQuestion = await client.execute(selectQuestionQuery, selectQuestionParams, {
-      prepare: true,
-    });
-    // this if block is not so important, but it's a good habit to check the existence of an entry first
+    // this if block is not so important since the request comes from our frontend, but it's a good habit to check the existence of an entry first
     if (resultQuestion.rows.length === 0) {
       return {
         statusCode: 404,
@@ -74,15 +71,9 @@ exports.handler = auth(async (event, context) => {
     const question = resultQuestion.rows[0];
 
     // Check if the user has already voted on this question
-    const selectVoteQuery = `
-      SELECT * FROM ${keyspace}.${votesTable}
-      WHERE user_id = ? AND question_id = ?`;
+    const resultVote = await client.execute(`SELECT * FROM ${keyspace}.${votesTable} WHERE user_id = ? AND question_id = ?`, [user_id, question_id], { prepare: true });
 
-    const selectVoteParams = [user_id, question_id];
-
-    const resultVote = await client.execute(selectVoteQuery, selectVoteParams, {
-      prepare: true,
-    });
+    const batchQueries = [];
 
     // Function enters this block if no vote has been registered earlier
     if (resultVote.rows.length === 0) {
@@ -94,14 +85,9 @@ exports.handler = auth(async (event, context) => {
       }
 
       // Create a new entry for the user's vote inside the votes table depending on the value retrieved from the QuestionsDetails page
-      const insertVoteQuery = `
-        INSERT INTO ${keyspace}.${votesTable} (user_id, question_id, vote_value)
-        VALUES (?, ?, ?)`;
-
-      const insertVoteParams = [user_id, question_id, value === "upvote" ? 1 : -1];
-
-      await client.execute(insertVoteQuery, insertVoteParams, {
-        prepare: true,
+      batchQueries.push ({
+        query: `INSERT INTO ${keyspace}.${votesTable} (user_id, question_id, vote_value) VALUES (?, ?, ?)`,
+        params: [user_id, question_id, value === "upvote" ? 1 : -1]
       });
     } else {
       // Function enters this else block if there is already an existing entry for a user's vote on a particular question
@@ -111,13 +97,19 @@ exports.handler = auth(async (event, context) => {
       if (value === "upvote" && existingVote.vote_value === 1) {
         // Since user has already upvoted, remove the vote entry from the votes table altogether
         question.vote_count -= 1;
-        await client.execute(`DELETE FROM ${keyspace}.${votesTable} WHERE user_id = ? AND question_id = ?`, [user_id, question_id], { prepare: true });
+        batchQueries.push ({
+          query: `DELETE FROM ${keyspace}.${votesTable} WHERE user_id = ? AND question_id = ?`,
+          params: [user_id, question_id]
+        });
 
         //Function enters else if block, if the user has previously downvoted the question and has now pressed the downvote button again
       } else if (value === "downvote" && existingVote.vote_value === -1) {
         // Since user has already downvoted, remove the vote entry from the votes table altogether
         question.vote_count += 1;
-        await client.execute(`DELETE FROM ${keyspace}.${votesTable} WHERE user_id = ? AND question_id = ?`, [user_id, question_id], { prepare: true });
+        batchQueries.push({
+          query: `DELETE FROM ${keyspace}.${votesTable} WHERE user_id = ? AND question_id = ?`,
+          params: [user_id, question_id]
+        });
 
         //Function enters the final else block if the values from the current button click and the value present inside the votes table are dissimilar
         //This is the case when the user has previously upvoted the question and has now pressed the downvote button or vice-versa which means we have
@@ -128,13 +120,21 @@ exports.handler = auth(async (event, context) => {
         } else if (value === "downvote") {
           question.vote_count -= 2;
         }
-
-        await client.execute(`UPDATE ${keyspace}.${votesTable} SET vote_value = ? WHERE user_id = ? AND question_id = ?`, [value === "upvote" ? 1 : -1, user_id, question_id], { prepare: true });
+        batchQueries.push({
+          query: `UPDATE ${keyspace}.${votesTable} SET vote_value = ? WHERE user_id = ? AND question_id = ?`,
+          params: [value === "upvote" ? 1 : -1, user_id, question_id]
+        });
       }
     }
 
     // Update the vote_count in the questions table
-    await client.execute(`UPDATE ${keyspace}.${questionsTable} SET vote_count = ? WHERE question_id = ?`, [question.vote_count, question_id], { prepare: true });
+    batchQueries.push({
+      query: `UPDATE ${keyspace}.${questionsTable} SET vote_count = ? WHERE question_id = ?`,
+      params: [question.vote_count, question_id]
+    });
+    await client.batch(batchQueries, { prepare: true });
+
+    console.log(`User ${user_id} has voted on question ${question_id} with value ${value}`);
 
     return {
       statusCode: 200,
@@ -143,10 +143,8 @@ exports.handler = auth(async (event, context) => {
   } catch (error) {
     console.error(error);
     return {
-      statusCode: 404,
-      body: JSON.stringify({ message: "Vote update failed" }),
+      statusCode: 500,
+      body: JSON.stringify({ message: "Vote update failed",  error: error.message  }),
     };
-  } finally {
-    await client.shutdown();
   }
 });

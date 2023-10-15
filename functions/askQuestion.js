@@ -16,6 +16,12 @@ const client = new Client({
     password: process.env.ASTRA_DB_PASSWORD,
   },
 });
+
+client.connect().catch(error => {
+  console.error('Failed to connect to the database:', error);
+  process.exit(1);
+});
+
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
 const questionsTable = process.env.ASTRA_DB_QUESTIONS;
 
@@ -51,8 +57,6 @@ exports.handler = auth(async (event, context) => {
   const noofanswers = 0;
   
   try {
-    await client.connect();
-
     const query = `
       INSERT INTO ${keyspace}.${questionsTable} (question_id, questiontitle, questionbody, questiontags, userposted, user_id, noofanswers, vote_count, askedon)
       VALUES (uuid(), ?, ?, ?, ?, ?, ?, ?, toTimestamp(now()))`;
@@ -73,7 +77,5 @@ exports.handler = auth(async (event, context) => {
       statusCode: 409,
       body: JSON.stringify("Couldn't post a new question"),
     };
-  } finally {
-    await client.shutdown();
   }
 });

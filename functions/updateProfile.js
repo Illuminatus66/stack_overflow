@@ -8,13 +8,18 @@ dotenv.config();
 const filePath = path.join(__dirname, '../secure-connect-stack-overflow.zip')
 
 const client = new Client({
-  cloud: {
+  cloud: { 
     secureConnectBundle: filePath,
   },
-  credentials: {
+  credentials: { 
     username: process.env.ASTRA_DB_USERNAME,
     password: process.env.ASTRA_DB_PASSWORD,
   },
+});
+
+client.connect().catch(error => {
+  console.error('Failed to connect to the database:', error);
+  process.exit(1);
 });
 
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
@@ -49,8 +54,6 @@ exports.handler = auth(async (event, context) => {
   const { name, about, tags } = JSON.parse(event.body);
 
   try {
-    await client.connect();
-    
     const profileUpdateQuery = `
       UPDATE ${keyspace}.${usersTable}
       SET name = ?, about = ?, tags = ?
@@ -81,8 +84,6 @@ exports.handler = auth(async (event, context) => {
       statusCode: 404,
       body: JSON.stringify({ message: "Profile update failed" }),
     };
-  } finally {
-    await client.shutdown();
   }
 });
 

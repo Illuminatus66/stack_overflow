@@ -17,6 +17,11 @@ const client = new Client({
   },
 });
 
+client.connect().catch(error => {
+  console.error('Failed to connect to the database:', error);
+  process.exit(1);
+});
+
 const keyspace = process.env.ASTRA_DB_KEYSPACE;
 const questionsTable = process.env.ASTRA_DB_QUESTIONS;
 const answersTable = process.env.ASTRA_DB_ANSWERS;
@@ -64,8 +69,6 @@ exports.handler = auth(async (event, context) => {
   const user_id = event.user_id;
 
   try {
-    await client.connect();
-    
     await updateNoOfQuestions(question_id, noofanswers);
 
     console.log(`Number of answers associated to question ${question_id} has been updated to ${noofanswers} `)
@@ -90,7 +93,5 @@ exports.handler = auth(async (event, context) => {
       statusCode: 500,
       body: JSON.stringify({ message: "Something went wrong..." }),
     };
-  } finally {
-    await client.shutdown();
   }
 });
